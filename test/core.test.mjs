@@ -59,8 +59,10 @@ test('CSV importer handles quoted commas, multiline fields and double quotes',()
  const result=parseCsv('name,note\r\na,"line, one\nline ""two"""\r\n');assert.deepEqual(result,[{name:'a',note:'line, one\nline "two"'}]);
 });
 async function appFixture(t,options={}) {
- const dir=await temp(t),home=path.join(dir,'home');await fs.mkdir(home);
- const app=await createApp({home,dataDir:path.join(dir,'data'),probe:async()=>[{id:'codex',name:'Codex',installed:true,auth:'signed-in',dispatch:'direct'}],...options});app.server.listen(0,'127.0.0.1');await once(app.server,'listening');t.after(()=>new Promise(resolve=>app.server.close(resolve)));
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'harness-test-')),home=path.join(dir,'home');await fs.mkdir(home);
+ let app;
+ t.after(async()=>{if(app){if(app.server.listening)await new Promise(resolve=>app.server.close(resolve));await app.store.pendingWrite;}await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:100});});
+ app=await createApp({home,dataDir:path.join(dir,'data'),probe:async()=>[{id:'codex',name:'Codex',installed:true,auth:'signed-in',dispatch:'direct'}],...options});app.server.listen(0,'127.0.0.1');await once(app.server,'listening');
  const root='http://127.0.0.1:'+app.server.address().port;const state=await (await fetch(root+'/api/state')).json();
  const post=async(route,body)=>{const response=await fetch(root+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.csrfToken},body:JSON.stringify(body)});return {status:response.status,body:await response.json()};};
  return {app,root,post,dir};
