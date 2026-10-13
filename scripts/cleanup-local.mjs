@@ -3,7 +3,7 @@ import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {execFileSync,spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {sameLocalPath} from '../lib/path-identity.mjs';
+import {sameFileIdentity} from '../lib/file-identity.mjs';
 const candidates=['.verification','data/qa'];
 function directory(root,relative,optional=false) {
   let cursor=root;
@@ -16,8 +16,12 @@ function directory(root,relative,optional=false) {
 }
 export function cleanupLocal(root,{apply=false}={}) {
   root=path.resolve(root);
+  if(fs.lstatSync(root).isSymbolicLink())throw new Error('Cleanup requires a real repository root.');
+  root=fs.realpathSync(root);
   const git=args=>execFileSync('git',args,{cwd:root,encoding:'utf8'});
-  if(!sameLocalPath(path.resolve(git(['rev-parse','--show-toplevel']).trim()),root))throw new Error('Run cleanup from the repository root.');
+  const repository=path.resolve(git(['rev-parse','--show-toplevel']).trim());
+  const actual=fs.statSync(root,{bigint:true}),expected=fs.statSync(repository,{bigint:true});
+  if(!sameFileIdentity(actual,{dev:String(expected.dev),ino:String(expected.ino)}))throw new Error('Run cleanup from the repository root.');
   const found=[];
   for(const candidate of candidates) {
     if(!directory(root,candidate,true))continue;

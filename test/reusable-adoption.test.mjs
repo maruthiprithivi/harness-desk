@@ -52,7 +52,7 @@ test('both target agents and placements install without execution and restore ex
     fs.link = async (stage, destination) => {
       const records = Object.keys(f.store.manifest).filter(name => name.startsWith('adoptions/'));
       const record = await f.store.read(records.at(-1)), file = record.files.find(file => file.destination === destination);
-      assert.ok(file?.identity); assert.equal((await fs.lstat(stage)).ino, file.identity.ino);
+      assert.ok(file?.identity); assert.equal((await fs.lstat(stage,{bigint:true})).ino.toString(), file.identity.ino);
       assert.equal(file.hash, createHash('sha256').update(await fs.readFile(stage)).digest('hex'));
       publications.push(destination); return link(stage, destination);
     };
@@ -64,7 +64,7 @@ test('both target agents and placements install without execution and restore ex
     assert.equal(f.store.manifest['adoptions/' + record.id + '.json'].kind, 'workflow-adoption');
     for (const file of record.files) {
       assert.equal(await fs.readFile(file.destination, 'utf8'), input.bundle.files.find(source => source.path === file.path).content);
-      assert.equal((await fs.stat(file.destination)).mode & 0o777, 0o600); assert.equal((await fs.stat(file.destination)).nlink, 1);
+      if(process.platform!=='win32')assert.equal((await fs.stat(file.destination)).mode & 0o777, 0o600); assert.equal((await fs.stat(file.destination)).nlink, 1);
       assert.equal(await exists(file.stagePath), false);
     }
     const persisted = JSON.stringify(await f.reload(record.id));
@@ -167,8 +167,8 @@ test('restart recovers a published target with its recorded stage after persiste
   const store = await new Store(f.store.root).init(), saved = await store.read('adoptions/' + response.id + '.json');
   assert.equal(saved.status, 'installing');
   const published = saved.files.find(file => file.identity); assert.ok(published);
-  assert.equal((await fs.lstat(published.destination)).ino, published.identity.ino);
-  assert.equal((await fs.lstat(published.stagePath)).ino, published.identity.ino);
+  assert.equal((await fs.lstat(published.destination,{bigint:true})).ino.toString(), published.identity.ino);
+  assert.equal((await fs.lstat(published.stagePath,{bigint:true})).ino.toString(), published.identity.ino);
   assert.equal((await fs.lstat(published.destination)).nlink, 2);
   const restored = await f.restore(saved, input, store);
   assert.equal(restored.status, 'restored', JSON.stringify(restored));
@@ -183,7 +183,7 @@ test('changed, replaced, symlinked or externally hardlinked entries preserve all
     if (mutation === 'edited') await fs.writeFile(skill.destination, 'External edit');
     if (mutation === 'replaced') {
       await fs.writeFile(external, input.bundle.files[0].content);
-      assert.notEqual((await fs.stat(external)).ino, skill.identity.ino);
+      assert.notEqual((await fs.stat(external,{bigint:true})).ino.toString(), skill.identity.ino);
       await fs.rename(external, skill.destination);
     }
     if (mutation === 'symlink') { await fs.writeFile(external, 'External linked entry'); await fs.unlink(skill.destination); await fs.symlink(external, skill.destination); }
@@ -193,7 +193,7 @@ test('changed, replaced, symlinked or externally hardlinked entries preserve all
     assert.equal(await exists(skill.destination), true); await unchangedDependencies(record, input.bundle);
     assert.equal(await exists(await f.store.location('_archive/adoptions/' + record.id + '/' + skill.path)), false);
     if (mutation === 'symlink') assert.equal(await fs.readFile(external, 'utf8'), 'External linked entry');
-    if (mutation === 'hardlink') assert.equal((await fs.lstat(external)).ino, skill.identity.ino);
+    if (mutation === 'hardlink') assert.equal((await fs.lstat(external,{bigint:true})).ino.toString(), skill.identity.ino);
   }
 });
 
@@ -228,7 +228,7 @@ test('interrupted exclusive source/archive pair resumes without overwriting and 
   assert.equal(incomplete.status, 'restore-incomplete');
   const store = await new Store(f.store.root).init(), saved = await store.read('adoptions/' + record.id + '.json'), skill = entry(saved);
   const archive = await store.location('_archive/adoptions/' + record.id + '/' + skill.path);
-  assert.equal((await fs.lstat(skill.destination)).ino, (await fs.lstat(archive)).ino); assert.equal((await fs.lstat(archive)).nlink, 2);
+  assert.equal((await fs.lstat(skill.destination,{bigint:true})).ino.toString(), (await fs.lstat(archive,{bigint:true})).ino.toString()); assert.equal((await fs.lstat(archive)).nlink, 2);
   const resumed = await f.restore(saved, input, store);
   assert.equal(resumed.status, 'restored', JSON.stringify(resumed)); assert.equal(await exists(skill.destination), false); assert.equal((await fs.lstat(archive)).nlink, 1);
   const shared = await fixture(t), firstInput = shared.options({ bundle: bundle('first-fixture') }), secondInput = shared.options({ bundle: bundle('second-fixture') });
@@ -274,7 +274,7 @@ test('atomic editor replacements are preserved in private capture and rollback n
       if (source === skill.destination && destination === capturePath && !captured) {
         captured = true;
         const editor = path.join(f.dir, 'editor-save.md'); await fs.writeFile(editor, firstEdit);
-        assert.notEqual((await fs.stat(editor)).ino, skill.identity.ino);
+        assert.notEqual((await fs.stat(editor,{bigint:true})).ino.toString(), skill.identity.ino);
         await rename(editor, skill.destination);
       }
       return rename(source, destination);
@@ -331,7 +331,7 @@ test('restart inspects pinned private captures after rename completes before the
       if (!interrupted && source === skill.destination && destination === capturePath) {
         if (replacement) {
           const editor = path.join(f.dir, 'checkpoint-editor.md'); await fs.writeFile(editor, editedContent);
-          assert.notEqual((await fs.stat(editor)).ino, skill.identity.ino); await rename(editor, skill.destination);
+          assert.notEqual((await fs.stat(editor,{bigint:true})).ino.toString(), skill.identity.ino); await rename(editor, skill.destination);
         }
         await rename(source, destination); interrupted = true;
         throw new Error('Synthetic interruption after atomic capture before checkpoint');

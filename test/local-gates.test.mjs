@@ -18,7 +18,10 @@ test('cleanup previews and archives only disposable artifacts with recoverable p
 test('cleanup refuses tracked content, absent ignores and symlinked roots',t=>{
  const root=fixture(t);fs.mkdirSync(path.join(root,'.verification'));fs.writeFileSync(path.join(root,'.verification','fixture.txt'),'synthetic');execFileSync('git',['add','-f','.verification/fixture.txt'],{cwd:root});assert.throws(()=>cleanupLocal(root,{apply:true}),/tracked/);
  const second=fixture(t);fs.mkdirSync(path.join(second,'.verification'));fs.writeFileSync(path.join(second,'.gitignore'),'');assert.throws(()=>cleanupLocal(second,{apply:true}),/ignored/);
- if(process.platform!=='win32'){const third=fixture(t);fs.mkdirSync(path.join(third,'actual'));fs.symlinkSync('actual',path.join(third,'.verification'));assert.throws(()=>cleanupLocal(third,{apply:true}),/real directories/);}
+ if(process.platform!=='win32'){
+  const third=fixture(t);fs.mkdirSync(path.join(third,'actual'));fs.symlinkSync('actual',path.join(third,'.verification'));assert.throws(()=>cleanupLocal(third,{apply:true}),/real directories/);
+  const fourth=fixture(t),alias=path.join(fourth,'root-alias');fs.symlinkSync(fourth,alias,'dir');assert.throws(()=>cleanupLocal(alias,{apply:true}),/real repository root/);
+ }
 });
 test('release prerequisites stay blocked for the current unpublished package',()=>{
  const issues=releaseFindings({name:'old-name',private:true},'',{committed:false,clean:false});assert.equal(issues.length,8);assert.ok(issues.some(x=>x.includes('LICENSE')));assert.ok(issues.some(x=>x.includes('reviewed source commit')));assert.equal(publicPath('CONTRIBUTING.md'),true);assert.equal(publicPath('.local-archive/recovery.md'),false);

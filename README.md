@@ -74,3 +74,7 @@ npm run check:local
 Tests use synthetic data and never require signed-in agents. Hooks preserve existing user hooks and block unsafe publication. Run `node server.mjs` for a foreground development server.
 
 [Report a bug](https://github.com/maruthiprithivi/harness-desk/issues) with a synthetic reproduction. For vulnerabilities, follow [SECURITY.md](SECURITY.md).
+
+## License
+
+Project licensing is pending maintainer selection. Package publication remains disabled until it is approved.
