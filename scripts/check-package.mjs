@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {inspectEntry} from './check-public.mjs';
 
 const runtimeRoots=new Set(['package.json','harness-desk.mjs','start.mjs','server.mjs','README.md','LICENSE','SECURITY.md','CHANGELOG.md']);
-const runtimePublic=new Set(['public/app.js','public/first-use.js','public/first-use.css','public/index.html','public/style.css','public/vendor/editor.js','public/vendor/license/provenance.md']);
+const runtimePublic=new Set(['public/app.js','public/first-use.js','public/first-use.css','public/index.html','public/style.css','public/favicon.svg','public/vendor/editor.js','public/vendor/license/provenance.md']);
 export const packagePath=file=>runtimeRoots.has(file)||runtimePublic.has(file)||/^lib\/[a-z0-9_][a-z0-9._-]*\.mjs$/i.test(file);
 export const packagePatterns=[...[...runtimeRoots].filter(file=>file!=='package.json'),'lib/*.mjs',...runtimePublic];
 const digest=buffer=>createHash('sha256').update(buffer).digest('hex');

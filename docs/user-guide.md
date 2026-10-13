@@ -4,21 +4,21 @@ Harness Desk helps you understand the setup around a coding agent, make one revi
 
 Prefer a walkthrough? [Watch or download the narrated explainer](https://github.com/maruthiprithivi/harness-desk/raw/refs/heads/main/docs/assets/explainer/harness-desk.mp4). Its captions sit below the visuals.
 
-**Development preview.** This is a source checkout, not a released npm package. Windows validation is still in progress. All screenshots below use an isolated synthetic project. The 12,000 → 9,000 comparison is simulated, not a measured saving from a real optimization.
+**GitHub beta.** Install the reviewed archive from GitHub Releases or run from source. Windows validation is still in progress. All screenshots below use an isolated synthetic project. The 12,000 → 9,000 comparison is simulated, not a measured saving from a real optimization.
 
 ## 1. Open your local workspace
 
-You need Node.js 22 or newer and a local checkout containing `package.json` and `server.mjs`. In that folder, run:
+You need Node.js 22 or newer. Follow [Quick start](../README.md#quick-start) to install the GitHub archive, then run:
 
 ```sh
-npm start
+harness-desk start
 ```
 
 Open [the local dashboard](http://127.0.0.1:4319). On macOS, `start.command` is another launcher. Windows has `start.cmd`, but native Windows behavior has not yet been fully validated. See the [Windows work](https://github.com/maruthiprithivi/harness-desk/issues/6).
 
-The launcher prints a process ID and leaves the service running in the background. Run it again after restarting your computer. If the page refuses to connect, check that the launcher reported readiness and inspect `data/runtime/server.log`. See [the README](../README.md) for ports, stopping the server and data-directory locks.
+The launcher prints a process ID and leaves the service running in the background. Run it again after restarting your computer. If the page refuses to connect, check readiness and the printed log location. Installed-package data defaults to `~/.harness-desk`; source-checkout data defaults to `data/` in the checkout. For a source checkout, use `npm start`. See [runtime controls](runtime.md) for ports, stopping and data-directory locks.
 
-In **Start here**, use the setup controls under **More setup and analysis tools** to add your repository folder and discover installed agents. Sign in through the agent's own CLI if needed; do not paste credentials into the dashboard. Use **Refresh files** after making changes outside the app.
+In **Start here**, choose **Add your first project** to add a repository folder. **Discover global setup** lets you explore shared files first. Additional setup controls remain under **More setup and analysis tools**. Sign in through the agent's own CLI if needed; do not paste credentials into the dashboard. Use **Refresh files** after making changes outside the app.
 
 ## 2. Choose a project and agent
 
@@ -65,7 +65,7 @@ Return to **Start here → Measure a fresh session**.
 
 The app starts a fresh supported agent session and captures its own reading. You do not need to find log files. Real runs use your account tokens. Configured hooks, extensions and MCP servers may start; read-only shell restrictions do not prevent every startup side effect.
 
-If a run cannot provide a reading, follow its explanation. **Compare agent support** distinguishes supported measurements from validation gaps. Claude and Codex also offer **Read an existing local session instead** as a secondary path.
+If a run cannot provide a reading, follow its explanation. **What was actually measured** shows the input total even when capacity is unavailable; no percentage is guessed. **Compare agent support** distinguishes real macOS session checks from synthetic tests. Claude and Codex also offer **Read an existing local session instead** as a secondary path. If you switch projects during a run, use **View running check** to return to it, or **Cancel running check** before starting another.
 
 ## 5. Improve one thing
 

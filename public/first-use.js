@@ -7,12 +7,31 @@
   const stamp = value => { const date = new Date(value); return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleString(); };
   const scopeKey = props => JSON.stringify([props.agent, props.repo || '', props.loading?.launchDirectory || '']);
   const validTokens = value => Number.isFinite(value) && value >= 0;
+  function prioritizeInsights(records, files, repo) {
+    const byId = new Map(list(files).map(file => [file.id,file]));
+    const normalize = value => String(value || '').replaceAll('\\','/');
+    const paths = new Set(list(files).map(file=>normalize(file.path)));
+    const cached = file => /(?:^|\/)plugins\/cache\//i.test(normalize(file?.path));
+    const priority = record => {
+      const file = byId.get(record.itemId);
+      if (file?.type === 'instruction' && file.status === 'applies') return repo && file.repo===repo ? 0 : 1;
+      if (repo && file?.repo === repo && !cached(file)) return 2;
+      if (record.confidence === 'user supplied measurement') return 3;
+      return cached(file) ? 5 : 4;
+    };
+    // Cached versions remain inspectable in Files; an identical copy is not a startup saving.
+    return list(records).filter(record => {
+      const file=byId.get(record.itemId);
+      return !(record.confidence==='exact content match' && (cached(file) || file?.duplicateOf && !paths.has(normalize(file.duplicateOf))));
+    })
+      .slice().sort((a,b) => priority(a) - priority(b));
+  }
   function sources(loading) {
     const seen = new Set();
     return list(loading?.groups).flatMap(group => list(group.files)).filter(file => {
       if (file.type !== 'instruction' || file.status !== 'applies' || seen.has(file.id || file.path)) return false;
       seen.add(file.id || file.path); return true;
-    }).map(file => ({...file, origin: !file.repo ? 'Global' : ['subdir','path-rule'].includes(file.scope) ? 'Folder' : 'Project'}));
+    }).map(file => ({...file, origin: !file.repo ? file.role==='ancestor instruction'||file.scope==='path'?'Folder':'Global' : ['subdir','path-rule'].includes(file.scope) ? 'Folder' : 'Project'}));
   }
   const percentageReading = record => record?.method === 'kiro-reported-context-percentage' && Number.isFinite(record.contextPercentage) && record.contextPercentage >= 0 && record.contextPercentage <= 100;
   function measurements(records, agent, repo, launchDirectory) {
@@ -62,7 +81,8 @@
     const agentName = list(props.state?.agents).find(agent=>agent.id===props.agent)?.name || ({claude:'Claude Code',codex:'Codex',opencode:'OpenCode',omp:'Oh My Pi',pi:'Pi',kiro:'Kiro',kimi:'Kimi Code'}[props.agent]) || props.agent || 'Your agent';
     const capability = props.state?.agentSupport?.[props.agent];
     const automaticSupported = capability ? capability.verification === 'automatic' : supported;
-    const runs=[...list(props.state?.verificationRuns),...view.localRuns].filter((record,index,all)=>all.findIndex(item=>item.id===record.id)===index)
+    const allRuns=[...list(props.state?.verificationRuns),...view.localRuns].filter((record,index,all)=>all.findIndex(item=>item.id===record.id)===index);
+    const runs=allRuns
       .filter(record=>record.agent===props.agent && (record.repo || '')===(props.repo || '') && (!props.repo || record.launchDirectory===(props.loading?.launchDirectory || props.repo)))
       .sort((a,b)=>String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
     const page = element('div','first-use');
@@ -77,11 +97,26 @@
       const tbody=element('tbody');
       for(const item of list(props.state.agents)) {
         const cap=props.state.agentSupport[item.id];if(!cap)continue;
-        const row=element('tr');row.append(element('th','',item.name),element('td','',cap.loading==='predicted'?'Discovery + predicted loading':'Discovery only'),element('td','',cap.verification==='automatic'?(cap.measurement==='context-percentage'?'After-response % · no token comparison':cap.validation==='live-tested'?'Automatic · live tested on macOS':'Automatic · adapter tested'):'Not available yet'));tbody.append(row);
+        const row=element('tr');row.append(element('th','',item.name),element('td','',cap.loading==='predicted'?'Discovery + predicted loading':'Discovery only'),element('td','',cap.verification==='automatic'?(cap.measurement==='context-percentage'?'After-response % · no token comparison':cap.validation==='live-tested'?'Automatic · real session checked on macOS':'Automatic · synthetic tests only'):'Not available yet'));tbody.append(row);
       }
       table.append(tbody);support.append(table);head.append(support);
     }
     page.append(head);
+    if (!list(props.state?.inventory?.repos).length && !props.repo) {
+      const welcome=element('section','first-use-section first-use-welcome');
+      welcome.append(element('h2','','Start with a project you already use'),element('p','first-use-muted','Add its folder to see the project instructions alongside your agent’s global setup. Your files stay on this machine.'),button('Add your first project',invoke(props.onAddProject),true));
+      if(!props.state?.inventory?.scannedAt)welcome.append(button('Discover global setup',()=>run('Discovering setup',async()=>{await view.props.api('/api/scan',{});await view.props.onRefresh?.();})));
+      page.append(welcome);
+    }
+    const foreignActive=allRuns.find(record=>record.status==='running' && !runs.some(local=>local.id===record.id));
+    if(foreignActive) {
+      const runningName=list(props.state?.agents).find(agent=>agent.id===foreignActive.agent)?.name || foreignActive.agent;
+      const banner=element('section','first-use-active');banner.setAttribute('aria-label','Active verification');
+      banner.append(element('h2','','A verification is already running'),element('p','',runningName+' · '+(foreignActive.repo?pathName(foreignActive.repo):'Global setup')),element('p','first-use-path','Launch folder: '+foreignActive.launchDirectory),element('p','first-use-muted','Wait for this check to finish before starting another. Its results belong to that project and agent.'));
+      const actions=element('div','first-use-actions');
+      actions.append(button('View running check',invoke(()=>props.onViewRun?.(foreignActive))),button('Cancel running check',()=>run('Cancelling verification',async()=>{await view.props.api('/api/verification',{action:'cancel',id:foreignActive.id});await view.props.onRefresh?.();})));
+      banner.append(actions);page.append(banner);
+    }
     const journey = element('ol','first-use-journey'); journey.setAttribute('aria-label','Your next steps');
     for (const [title,description] of [['Understand','See sources and measure a session'],['Improve','Review one worthwhile change'],['Verify','Compare and check behavior']]) {
       const step = element('li'); step.append(element('strong','',title),element('span','',description)); journey.append(step);
@@ -94,7 +129,7 @@
     const sourceFiles = loadingMatches ? sources(props.loading) : [];
     if (!loadingMatches) sourceSection.append(element('p','first-use-muted','Select a project and agent to load their instruction hierarchy.'));
     else if(capability?.loading==='unverified') sourceSection.append(element('p','first-use-muted','Configuration files can be inspected, but this agent’s loading order has not been verified. Explore setup to see the discovered sources.'));
-    else if (!sourceFiles.length) sourceSection.append(element('p','first-use-muted','No applicable instruction files were found in this scan. Explore setup to review discovery coverage.'));
+    else if (!sourceFiles.length) sourceSection.append(element('p','first-use-muted',props.state?.inventory?.scannedAt?'No applicable instruction files were found in this scan. Explore setup to review discovery coverage.':'Your files have not been scanned yet. Add a project or discover global setup to see your sources.'));
     else {
       sourceSection.append(element('p','first-use-muted','Predicted from your files. Session counters do not confirm which individual files were read.'));
       const rows = element('ul','first-use-sources');
@@ -106,6 +141,11 @@
       sourceSection.append(rows);
     }
     page.append(sourceSection);
+    if(records.length) {
+      const evidence=element('section','first-use-section');
+      evidence.append(element('h2','','What was actually measured'),observed(records[0],percentageReading(records[0])?'Latest context reading':'Latest first request'),element('p','first-use-muted','This is an observed session total. System prompt, tool, MCP and skill costs are not separately reported by this capture. The source list above remains a prediction.'));
+      page.append(evidence);
+    }
     const automatic=element('section','first-use-section first-use-automatic');automatic.append(element('h2','','Measure a fresh session'));
     if(!automaticSupported)automatic.append(element('p','first-use-muted','Automatic measurement is not available for '+agentName+' yet. You can inspect discovered configuration with Explore setup. No token saving is claimed for this integration.'));
     else {
@@ -158,14 +198,14 @@
           const fields=[['prompt','Representative task','textarea'],['expectedText','Literal response text check (optional)','input'],['model','Model (optional; uses the agent default)','input']];
           if(!props.repo)fields.unshift(['launchDirectory','Launch folder (absolute path)','input']);
           for(const [name,labelText,tag] of fields) {
-            const label=element('label','first-use-field',labelText),input=element(tag);input.value=view.draft[name];input.dataset.firstUseFocus='draft-'+name;
+            const label=element('label','first-use-field',labelText),input=element(tag);input.name='verification-'+name;input.id='first-use-'+name;input.value=view.draft[name];input.dataset.firstUseFocus='draft-'+name;
             if(tag==='textarea')input.rows=3;else input.type='text';
             input.addEventListener('input',()=>{if(!current()||view.busy)return;view.draft[name]=input.value;});label.append(input);form.append(label);
           }
         }
         const disclosure=element('p','first-use-disclosure','Starts real '+agentName+' with this global and project setup and uses account tokens. Configured hooks, extensions and MCP servers may run. '+(props.agent==='claude'?'Permission prompts are denied; previously allowed tools can still run. This is not a sandbox.':props.agent==='codex'?'The read-only shell sandbox does not prevent every possible side effect.':'The task asks the agent not to use tools. Tool execution is not sandboxed; your existing extensions and permissions still apply.'));
         form.append(disclosure);
-        const consent=element('label','first-use-consent'),checkbox=element('input');checkbox.type='checkbox';checkbox.checked=view.acknowledge;checkbox.dataset.firstUseFocus='verification-consent';
+        const consent=element('label','first-use-consent'),checkbox=element('input');checkbox.name='verification-consent';checkbox.id='first-use-consent';checkbox.type='checkbox';checkbox.checked=view.acknowledge;checkbox.dataset.firstUseFocus='verification-consent';
         checkbox.addEventListener('change',()=>{if(!current()||view.busy)return;view.acknowledge=checkbox.checked;paint();});consent.append(checkbox,element('span','','Allow this verification run'));form.append(consent);
         const start=button(baseline?'Run again after a change':'Run baseline check',()=>run('Starting verification',async()=>{
           const data={action:'start',agent:props.agent,repo:props.repo || '',launchDirectory:draft.launchDirectory,prompt:draft.prompt,expectedText:draft.expectedText || '',acknowledge:true};
@@ -179,7 +219,7 @@
         const installation=list(props.state?.agents).find(agent=>agent.id===props.agent);
         const unavailable=installation && (!installation.installed || installation.auth==='signed-out');
         if(unavailable)form.append(element('p','first-use-warning',!installation.installed?'Install '+agentName+' and refresh agent discovery to run this check.':'Sign in to '+agentName+' and refresh agent discovery to run this check.'));
-        start.disabled=!view.acknowledge || !!view.busy || !!unavailable;form.append(start);automatic.append(form);
+        start.disabled=!view.acknowledge || !!view.busy || !!unavailable || !!foreignActive;form.append(start);automatic.append(form);
       }
     }
     page.append(automatic);
@@ -200,12 +240,12 @@
       if (percent !== null) {
         const meter = element('div','first-use-meter'); meter.setAttribute('role','img'); meter.setAttribute('aria-label',percentageOnly ? percent.toFixed(2) + '% context after response' : number(record.inputTokens) + ' input tokens of ' + number(record.capacity) + ' reported capacity');
         const fill = element('span'); fill.style.width = Math.min(percent,100) + '%'; meter.append(fill); block.append(meter);
-      }
+      } else block.append(element('p','first-use-meta','Context capacity was not reported. We can compare input tokens, but cannot calculate a percentage of the window.'));
       block.append(element('p','first-use-muted',percentageOnly ? 'Harness-reported percentage after the response. Startup tokens and category costs are unavailable.' : 'First request · includes your prompt'),element('p','first-use-meta',(record.model || 'Model not reported') + ' · ' + stamp(record.measuredAt)));
       block.append(element('p','first-use-path','Launch folder: ' + (record.launchDirectory || 'Not reported')));
       return block;
     }
-    if (records.length) context.append(observed(records[0],'Latest saved reading'));
+    if (records.length) context.append(element('p','first-use-meta','Latest saved reading is shown above under What was actually measured.'));
     else context.append(element('p','first-use-empty',supported ? 'Read one session to see its first-request input total. You choose the file, preview the result, then save it.' : 'Local session measurements currently support Claude Code and Codex. You can still explore this agent’s setup.'));
     context.append(details('What can we measure?','Local session logs can report input tokens for the first request, including your prompt. They do not provide a reliable split into system instructions, tools, MCPs and skills, or prove individual file loading. Capacity is shown only when reported. Reading a log makes no request to an AI provider.'));
     async function findFiles() {
@@ -255,7 +295,9 @@
     }
     manual.append(context);if(supported)page.append(manual);
     const improve=element('section','first-use-section'); improve.append(element('h2','','Choose one thing to improve'));
-    const insights=list(props.insights).slice(0,3);
+    const insightFiles=[...list(props.loading?.groups).flatMap(group=>list(group.files)),...list(props.loading?.configuration?.files),...list(props.loading?.components?.items)];
+    const ranked=prioritizeInsights(props.insights,insightFiles,props.repo), insights=ranked.slice(0,3);
+    if(ranked.length<list(props.insights).length)improve.append(element('p','first-use-meta','Cache copies and duplicates outside this setup stay in Files for inspection. Matching copies alone do not establish an improvement.'));
     if (!insights.length) {
       improve.append(element('p','first-use-muted','No current suggestions for this setup. Explore your sources or ask your chosen agent what could be clearer or lighter.'),button('Ask about this setup',invoke(() => props.onAsk?.(null))));
     } else {
@@ -277,7 +319,7 @@
     else {
       const fields=element('div','first-use-comparison-fields');
       for(const [field,labelText] of [['before','Before'],['after','After']]) {
-        const label=element('label','',labelText),select=element('select'); select.setAttribute('aria-label',labelText+' reading');
+        const label=element('label','',labelText),select=element('select'); select.name='comparison-'+field;select.id='first-use-'+field;select.setAttribute('aria-label',labelText+' reading');
         const empty=element('option','','Choose a reading');empty.value='';select.append(empty);
         for(const record of records) {const option=element('option','',stamp(record.measuredAt)+' · '+number(record.inputTokens)+' tokens · '+(record.model || 'Model unknown')+(!props.repo?' · '+(record.launchDirectory || 'Folder unknown'):''));option.value=record.id;select.append(option);}
         select.value=records.some(record=>record.id===view[field])?view[field]:'';
@@ -315,5 +357,5 @@
       if(Number.isInteger(selection?.start))control?.setSelectionRange?.(selection.start,selection.end);
     }
   }
-  window.HarnessFirstUse={render,sources,measurements,occupancy};
+  window.HarnessFirstUse={render,sources,measurements,occupancy,prioritizeInsights};
 })();

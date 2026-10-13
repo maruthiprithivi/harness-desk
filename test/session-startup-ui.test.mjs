@@ -30,6 +30,7 @@ function renderHarness(records=[]) {
   const node=(tag='div',className='',textContent='')=>({tag,className,textContent,children:[],dataset:{},style:{},open:false,append(...children){this.children.push(...children);},replaceChildren(...children){this.children=children;},setAttribute(key,value){this[key]=value;},scrollIntoView(){calls.push('scroll');}});
   const get=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);};
   const ctx=vm.createContext({$:get,element:node,button:(label,classes,click)=>Object.assign(node('button',classes,label),{click}),loading:map,state:{contextBreakdowns:records},selectedAgent:'codex',activeRepo:'/project',loadingError:'',number:String,tokens:String,agentName:String,repoName:String,loadingDirectoryLabel:String,date:String,contextBreakdownCategories:()=>[{id:'skills',label:'Skills'},{id:'memory',label:'Instructions'}],showFileView:()=>calls.push('canvas'),componentDrilldown:type=>calls.push(type),inspectComponentServers:async()=>calls.push('inspect'),action:async(_button,fn)=>fn(),openEditor:(id,key)=>calls.push({id,key})});
+  ctx.window={};vm.runInContext(readFileSync(new URL('../public/first-use.js',import.meta.url),'utf8'),ctx);ctx.HarnessFirstUse=ctx.window.HarnessFirstUse;
   vm.runInContext(source.slice(source.indexOf('function sessionStartupModel('),source.indexOf('const contextBreakdownIds =')),ctx);
   const render=()=>vm.runInContext('renderSessionStartup()',ctx);
   const all=root=>[root,...root.children.flatMap(all)];
@@ -75,4 +76,9 @@ test('origin labels recognize Windows paths, Claude project homes and ancestor g
   assert.equal(origin({path:'/project/.claude/CLAUDE.md',repo:'/project'},{agent:'claude',launchDirectory:'/project'}).scope,'Repository');
   assert.equal(origin({path:'/synthetic/user/CLAUDE.md',repo:'',role:'ancestor instruction'},{agent:'claude',launchDirectory:'/project'}).scope,'Ancestor folder');
   assert.equal(origin({path:'/project/src/AGENTS.md',repo:'/project'},{agent:'codex',launchDirectory:'/project/src/deep'}).scope,'Ancestor folder');
+});
+test('startup overview exposes a scoped observed total without borrowing capacity or category estimates',()=>{
+ const h=renderHarness();h.ctx.state.contextEvidence=[{id:'current',agent:'codex',repo:'/project',launchDirectory:'/project',inputTokens:1200,capacity:null,measuredAt:'2026-01-01'},{id:'other',agent:'claude',repo:'/project',launchDirectory:'/project',inputTokens:99000,measuredAt:'2026-01-02'}];h.render();
+ const text=h.all().map(node=>node.textContent).join(' ');assert.match(text,/Observed first request.*1200 input tokens/);assert.match(text,/Capacity and category costs were not reported/);assert.doesNotMatch(text,/99000|NaN|% of reported capacity/);
+ h.ctx.loading={...map,launchDirectory:'/project/src'};h.render();assert.equal(h.all().some(node=>node.className==='startup-observed'),false);
 });

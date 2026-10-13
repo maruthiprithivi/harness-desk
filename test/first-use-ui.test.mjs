@@ -138,8 +138,37 @@ test('automatic comparable runs render paired observed values on reported capaci
 });
 
 test('support matrix distinguishes live, fixture-only, percentage and unavailable adapters',()=>{
- const h=harness();h.props.state.agents=[{id:'codex',name:'Codex',installed:true},{id:'pi',name:'Pi',installed:false},{id:'kiro',name:'Kiro',installed:true},{id:'orca',name:'Orca',installed:true}];h.props.state.agentSupport={codex:{loading:'predicted',verification:'automatic',validation:'live-tested'},pi:{loading:'unverified',verification:'automatic',validation:'adapter-tested'},kiro:{loading:'unverified',verification:'automatic',measurement:'context-percentage'},orca:{loading:'unverified',verification:'unavailable'}};h.render();assert.match(h.text(),/Automatic · live tested on macOS/);assert.match(h.text(),/Automatic · adapter tested/);assert.match(h.text(),/After-response % · no token comparison/);assert.match(h.text(),/Not available yet/);
+ const h=harness();h.props.state.agents=[{id:'codex',name:'Codex',installed:true},{id:'pi',name:'Pi',installed:false},{id:'kiro',name:'Kiro',installed:true},{id:'orca',name:'Orca',installed:true}];h.props.state.agentSupport={codex:{loading:'predicted',verification:'automatic',validation:'live-tested'},pi:{loading:'unverified',verification:'automatic',validation:'adapter-tested'},kiro:{loading:'unverified',verification:'automatic',measurement:'context-percentage'},orca:{loading:'unverified',verification:'unavailable'}};h.render();assert.match(h.text(),/Automatic · real session checked on macOS/);assert.match(h.text(),/Automatic · synthetic tests only/);assert.match(h.text(),/After-response % · no token comparison/);assert.match(h.text(),/Not available yet/);
  h.ui.render(h.root,{...h.props,agent:'pi',loading:{agent:'pi',repo:'/project',groups:[]}});assert.equal(h.find('Run baseline check').disabled,true);assert.match(h.text(),/Install Pi/);assert.match(h.text(),/loading order has not been verified/);assert.equal(h.find('Read an existing local session instead'),undefined);
+});
+test('first project setup is visible before discovery and global discovery uses the existing scan action',async()=>{
+ const requests=[];const h=harness(async(path,body)=>{requests.push({path,body});return {};});h.props.repo='';h.props.loading={agent:'codex',repo:'',groups:[]};h.props.onAddProject=()=>h.calls.push('add-project');h.render();
+ assert.match(h.text(),/Your files have not been scanned yet/);assert.doesNotMatch(h.text(),/No applicable instruction files were found in this scan/);
+ await h.find('Add your first project').click();assert.deepEqual(h.calls,['add-project']);
+ await h.find('Discover global setup').click();assert.deepEqual(JSON.parse(JSON.stringify(requests)),[{path:'/api/scan',body:{}}]);
+ h.props.state.inventory={scannedAt:'2026-01-01',repos:['/project']};h.render();assert.equal(h.find('Add your first project'),undefined);assert.equal(h.find('Discover global setup'),undefined);
+});
+test('a check in another scope has navigation and cancellation without leaking its result into this scope',async()=>{
+ const requests=[];const h=harness(async(path,body)=>{requests.push({path,body});return {};});const foreign={...runRecord({status:'running'}),agent:'claude',repo:'/other',launchDirectory:'/other/src',answer:'FOREIGN ANSWER'};
+ h.props.state.verificationRuns=[foreign];h.props.state.agents=[{id:'claude',name:'Claude Code'}];h.props.onViewRun=record=>h.calls.push(record.id);h.render();
+ assert.match(h.text(),/A verification is already running.*Claude Code.*other.*\/other\/src/);assert.doesNotMatch(h.text(),/FOREIGN ANSWER/);
+ await acknowledge(h);assert.equal(h.find('Run baseline check').disabled,true);await h.find('Run baseline check').click();assert.equal(requests.length,0);
+ await h.find('View running check').click();assert.deepEqual(h.calls,[foreign.id]);await h.find('Cancel running check').click();assert.deepEqual(JSON.parse(JSON.stringify(requests)),[{path:'/api/verification',body:{action:'cancel',id:foreign.id}}]);
+ h.props.state.verificationRuns=[{...foreign,status:'cancelled'}];h.render();assert.equal(h.find('View running check'),undefined);assert.equal(h.find('Run baseline check').disabled,false);
+});
+test('observed totals remain visible without capacity or a guessed percentage, and other scopes stay excluded',()=>{
+ const h=harness();h.props.state.contextEvidence=[{...reading('valid',1200),capacity:null},{...reading('foreign',99000),repo:'/other'}];h.render();
+ assert.match(h.text(),/What was actually measured.*1,200 input tokens/);assert.match(h.text(),/Context capacity was not reported/);assert.doesNotMatch(h.text(),/99,000|NaN|% of reported capacity/);assert.equal(h.root.all().some(node=>node.className==='first-use-meter'),false);
+ const fields=h.root.all().filter(node=>['input','textarea','select'].includes(node.tag));assert.ok(fields.every(node=>node.name || node.id));
+});
+test('project startup guidance outranks cache copies while ordinary duplicates remain reviewable',()=>{
+ const h=harness(),files=[{id:'cache',path:'/synthetic/.codex/plugins/cache/vendor/suite/1/SKILL.md',type:'skill'}, {id:'global',path:'/synthetic/.codex/AGENTS.md',type:'instruction',status:'applies'}, {id:'local',path:'/project/AGENTS.md',repo:'/project',type:'instruction',status:'applies'}, {id:'project-skill',path:'/project/.agents/skills/check/SKILL.md',repo:'/project',type:'skill'}];
+ const insights=[{title:'Cache duplicate',itemId:'cache',confidence:'exact content match'},{title:'Global instruction',itemId:'global'},{title:'Project instruction',itemId:'local'},{title:'Project duplicate',itemId:'project-skill',confidence:'exact content match'}];
+ assert.deepEqual(Array.from(h.ui.prioritizeInsights(insights,files,'/project'),record=>record.title),['Project instruction','Global instruction','Project duplicate']);
+ h.props.loading.configuration={files};h.props.insights=insights;h.render();assert.doesNotMatch(h.text(),/Cache duplicate/);assert.match(h.text(),/Project duplicate|Matching copies alone do not establish an improvement/);
+ assert.equal(insights.length,4);
+ const foreignCopy={id:'foreign-copy',type:'instruction',status:'applies',path:'/project/extra.md',duplicateOf:'/outside/AGENTS.md'};
+ assert.equal(h.ui.prioritizeInsights([{title:'Unavailable comparison',itemId:foreignCopy.id,confidence:'exact content match'}],[foreignCopy],'/project').length,0);
 });
 test('Kiro reading shows a labeled percentage and never zero input tokens or a startup saving',()=>{
  const h=harness();h.props.agent='kiro';h.props.state.agentSupport={kiro:{verification:'automatic',measurement:'context-percentage'}};h.props.state.contextEvidence=[{...reading('kiro-reading',null),agent:'kiro',capacity:null,contextPercentage:2.5,method:'kiro-reported-context-percentage'}];h.props.state.verificationRuns=[{...runRecord(),agent:'kiro',measurementId:'kiro-reading'}];h.render();assert.match(h.text(),/2.50% context after response/);assert.doesNotMatch(h.text(),/0 input tokens|Observed first request/);assert.match(h.text(),/cannot verify a startup saving/);assert.equal(h.find('Compare readings'),undefined);

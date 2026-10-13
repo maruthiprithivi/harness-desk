@@ -501,6 +501,16 @@ test('large plugin inventories reveal bounded family ranges instead of every plu
   const h=harness(files),model=h.context.configurationCanvasModel(),category=model.nodes.find(node=>node.kind==='available');
   const visible=Array.from(h.context.configurationVisibleNodes(model,{expandedIds:[category.id]})),children=visible.filter(node=>node.parentId===category.id);
   assert.ok(children.length<=12);assert.equal(children.reduce((sum,node)=>sum+node.files.length,0),129);assert.ok(!visible.some(node=>node.kind==='item'));
+  assert.equal(children[0].label,'vendor plugins');assert.equal(children[0].range,undefined);
+  const next=Array.from(h.context.configurationVisibleNodes(model,{expandedIds:[category.id,children[0].id]})).filter(node=>node.parentId===children[0].id);
+  assert.equal(next.length,11);assert.ok(next.every(node=>node.files.length<=12));
+});
+test('known skill suites remain visible before collection ranges in a large mixed inventory',()=>{
+ const files=[...Array.from({length:25},(_,index)=>asset('plugin-'+index,'skill','/synthetic/.codex/plugins/cache/vendor/plugin-'+index+'/1/skills/review/SKILL.md')),asset('g','skill','/synthetic/.codex/plugins/cache/vendor/gstack/1/skills/review/SKILL.md'),asset('h','skill',repo+'/.agents/skills/higgsfield-video/SKILL.md')];
+ const h=harness(files),model=h.context.configurationCanvasModel(),global=model.nodes.find(node=>node.id==='scope:global:skill');
+ const children=Array.from(h.context.configurationVisibleNodes(model,{expandedIds:[global.id]})).filter(node=>node.parentId===global.id);
+ assert.deepEqual(new Set(children.map(node=>node.label)),new Set(['gstack','vendor plugins']));assert.equal(children.reduce((n,node)=>n+node.files.length,0),26);
+ const repository=model.nodes.find(node=>node.id==='scope:repo:skill');assert.equal(model.nodes.find(node=>node.parentId===repository.id).label,'Higgsfield');
 });
 
 test('inspecting a visible source preserves focus and refresh does not reveal dismissed nodes',()=>{

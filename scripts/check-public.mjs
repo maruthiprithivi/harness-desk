@@ -23,7 +23,7 @@ const rootFiles=new Set(['.gitignore','.gitattributes','.cbmignore','AGENTS.md',
 const publicDocumentation=new Set(['docs/runtime.md','docs/configuration.md','docs/workflows.md','docs/privacy.md','docs/releasing.md']);
 export function publicPath(file) {
   if(Object.hasOwn(publicScreenshots,file)||Object.hasOwn(publicExplainer,file)||publicMedia.has(file)||publicDocumentation.has(file)||file==='.github/workflows/ci.yml')return true;
-  return rootFiles.has(file)||['public/vendor/editor.js','public/vendor/license/provenance.md','docs/context-measurement-capabilities.md','docs/designs/harness-desk-product-brief.md'].includes(file)||/^(?:lib\/[a-z0-9_][a-z0-9._-]*\.mjs|public\/[a-z0-9_][a-z0-9._-]*\.(?:html|css|js)|test\/[a-z0-9_][a-z0-9._-]*\.test\.mjs|scripts\/[a-z0-9_][a-z0-9._-]*\.mjs|\.githooks\/pre-(?:commit|push))$/i.test(file);
+  return rootFiles.has(file)||['public/favicon.svg','public/vendor/editor.js','public/vendor/license/provenance.md','docs/context-measurement-capabilities.md','docs/designs/harness-desk-product-brief.md'].includes(file)||/^(?:lib\/[a-z0-9_][a-z0-9._-]*\.mjs|public\/[a-z0-9_][a-z0-9._-]*\.(?:html|css|js)|test\/[a-z0-9_][a-z0-9._-]*\.test\.mjs|scripts\/[a-z0-9_][a-z0-9._-]*\.mjs|\.githooks\/pre-(?:commit|push))$/i.test(file);
 }
 const rules=[
   ['private key',/-----BEGIN (?:[A-Z ]*PRIVATE KEY|PGP PRIVATE KEY BLOCK)-----/g],

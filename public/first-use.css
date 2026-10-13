@@ -12,6 +12,9 @@
 .first-use-journey span{display:block;font-size:14px;color:var(--muted);margin-top:3px}
 .first-use-section{padding:26px 0;border-bottom:1px solid var(--line)}
 .first-use-section:first-of-type{padding-top:0}
+.first-use-welcome>.button{margin:8px 12px 8px 0}
+.first-use-active{padding:18px 20px;border-left:3px solid var(--teal);background:var(--white);margin-bottom:24px}
+.first-use-active h2{font-size:19px}
 .first-use-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
 .first-use-muted{color:var(--muted);font-size:15px;margin-top:8px}
 .first-use-sources{list-style:none;margin:18px 0 0;padding:0}

@@ -10,6 +10,7 @@ import {publicPath,inspect,inspectEntry,pushTargets} from '../scripts/check-publ
 
 test('public paths exclude local data even when forced into Git',()=>{
   assert.equal(publicPath('.gitattributes'),true);
+  assert.equal(publicPath('public/favicon.svg'),true);assert.equal(publicPath('public/local-capture.svg'),false);
   for(const file of ['data/settings.json','sources/journal.md','.break-free/HANDOFF.md','.env','secrets/runtime.env','.codex/config.toml','public/.env.js','scripts/.env.mjs','public/screenshots/local.png','docs/private.md','lib/../data/chat.json','.github/workflows/private.yml'])assert.equal(publicPath(file),false,file);
   for(const file of ['README.md','AGENTS.md','CHANGELOG.md','SECURITY.md','harness-desk.mjs','docs/runtime.md','docs/configuration.md','docs/workflows.md','docs/privacy.md','docs/releasing.md','.github/workflows/ci.yml','docs/context-measurement-capabilities.md','docs/designs/harness-desk-product-brief.md','server.mjs','lib/store.mjs','public/app.js','scripts/check-public.mjs','test/core.test.mjs','.githooks/pre-push'])assert.equal(publicPath(file),true,file);
 });

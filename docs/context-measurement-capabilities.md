@@ -1,6 +1,6 @@
 # Context measurement capabilities
 
-Verified on 2026-10-13 against Claude Code **2.1.296** and Codex CLI **0.162.1**. This is the measurement boundary for Harness Desk's first-use flow.
+Verified on 2026-10-14 against Claude Code **2.1.296** and Codex CLI **0.162.1**. This is the measurement boundary for Harness Desk's first-use flow.
 
 ## What was verified
 
@@ -81,7 +81,7 @@ Model runs have a three-minute limit, plus up to fifteen seconds each for versio
 | Agent | Automatic capture | Validation | Limits |
 | --- | --- | --- | --- |
 | Codex | First-request input and response check | Real macOS session, 0.162.1 | No verified category breakdown; capacity only when reported |
-| Claude Code | First-response input including cache reads/writes, response check | Synthetic stream/runner/API tests; fresh live check blocked by account quota on 2.1.296 | No successful live managed measurement yet; existing allowed tools and startup hooks can run |
+| Claude Code | First-response input including cache reads/writes, response check | Synthetic stream/runner/API tests and a successful fresh managed session on macOS, 2.1.296 | One live check; no live before/after comparison yet. Existing allowed tools and startup hooks can run |
 | OpenCode | First completed step from an automatic export of the exact emitted session | Real macOS session, 1.18.35 | 1.x export only; sharing disabled in a merged environment overlay; no sandbox |
 | Oh My Pi (OMP) | Completed first-response input from a fresh ephemeral JSON session | Real macOS session, 18.6.0 | Retries, resumed sessions and extra requests rejected; no sandbox |
 | Kimi Code | First-request usage from the exact session’s native wire journal | Real macOS session, 2.1.1 / wire 1.5 | Native 2.x only; headless permissions apply; no sandbox |

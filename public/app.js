@@ -144,6 +144,7 @@ function metric(label,value,foot,{emphasis = false,tag = ''} = {}) {
 }
 function showError(error) {
   $('error-banner').textContent = error.message || String(error);
+  $('error-banner').connectionError = error.connectionError === true;
   $('error-banner').hidden = false;
   if (!$('chat-drawer').hidden) $('chat-feedback').textContent = error.message || String(error);
 }
@@ -273,7 +274,7 @@ function recommendationDecisionForm(record,agent = selectedAgent,repo = activeRe
   details.append(element('p','form-hint','Decision scope: ' + agentName(agent) + ' · ' + (repo ? repoName(repo) : 'Global setup only') + '. This proposal uses evidence from the last scan. This saves your assessment, not configuration changes or proof of improvement.'));
   if (!record.id || typeof record.fingerprint !== 'string' || !record.fingerprint) { details.append(element('p','form-hint','A current source version is required before recording a decision.')); return details; }
   const fingerprint = record.fingerprint, key = JSON.stringify([record.id,agent,repo]), saved = recommendationDecisionFor(record,agent,repo), draft = recommendationDrafts.get(key);
-  const form = element('form'), label = element('label','','Decision note'), note = element('textarea'); note.rows = 2; note.maxLength = 2000; note.required = true; note.placeholder = 'What did you check, plan to try, or decide for this scope?'; note.value = draft?.note ?? (recommendationDecisionCurrent(record,saved) ? saved.note || '' : ''); label.append(note);
+  const form = element('form'), label = element('label','','Decision note'), note = element('textarea'); note.name='recommendation-note';note.rows = 2; note.maxLength = 2000; note.required = true; note.placeholder = 'What did you check, plan to try, or decide for this scope?'; note.value = draft?.note ?? (recommendationDecisionCurrent(record,saved) ? saved.note || '' : ''); label.append(note);
   const error = element('p','error-banner',draft?.error || (draft && draft.fingerprint !== fingerprint ? 'The scanned source changed since this draft note. Review the current proposal before recording a decision.' : '')); error.setAttribute('role','alert'); error.hidden = !error.textContent;
   const controls = element('div','item-actions');
   for (const [status,text] of [['accepted','Plan to try'],['dismissed','Dismiss for this scope'],['verified','I verified it'],['review','Review again']]) { const control = button(text,'text-link',() => {}); control.type = 'submit'; control.value = status; controls.append(control); }
@@ -971,6 +972,17 @@ function renderFirstUse() {
   const repo = activeRepo, agent = selectedAgent, key = loadingKey, scan = state.inventory?.scannedAt;
   const current = () => activeRepo === repo && selectedAgent === agent && loadingKey === key && state.inventory?.scannedAt === scan;
   window.HarnessFirstUse.render(root,{state,loading:map,agent,repo,insights,api,onRefresh:refresh,
+    onAddProject:() => {
+      if(!current())return;
+      const field=$('setup-folder-path');$('first-use-more').open=true;$('setup-guide').open=true;
+      const disclosure=field.closest('details');if(disclosure)disclosure.open=true;
+      field.scrollIntoView({block:'center',behavior:'smooth'});field.focus({preventScroll:true});
+    },
+    onViewRun:run => {
+      if(!current() || !array(state.verificationRuns).some(record=>record.id===run.id && record.status==='running'))return;
+      if(run.repo)loadingDirectories.set(JSON.stringify([run.repo,run.agent]),run.launchDirectory);
+      chooseRepo(run.repo || '');chooseAgent(run.agent);location.hash='dashboard';
+    },
     onFiles:() => { if (!current()) return; showFileView(false); location.hash = 'inventory'; },
     onEdit:id => { if (!current() || !currentIds.has(id)) return; openEditor(id,JSON.stringify([map.repo,map.agent,map.launchDirectory])); },
     onAsk:record => {
@@ -988,9 +1000,12 @@ async function refresh() {
   const sequence = ++refreshSequence;
   try {
     const result = await api('/api/state');
-    if (sequence === refreshSequence) { state = result; renderState(); }
+    if (sequence === refreshSequence) {
+      if($('error-banner').connectionError) { $('error-banner').hidden=true;$('error-banner').connectionError=false; }
+      state = result; renderState();
+    }
   } catch (error) {
-    if (sequence === refreshSequence) { showError(error); $('footer-state').textContent = 'Local sidecar connection failed'; }
+    if (sequence === refreshSequence) { error.connectionError=true;showError(error); $('footer-state').textContent = 'Local sidecar connection failed'; }
   }
 }
 function schedulePoll() {
@@ -1300,11 +1315,11 @@ function configurationWorkspaceKey() { return loading ? JSON.stringify([loading.
 function configurationWorkspaceCurrent(key) { return !!loading && key === configurationWorkspaceKey() && loading.repo === activeRepo && loading.agent === selectedAgent; }
 function configurationSourceFamily(file) {
   const path = String(file.path || '').replace(/\\/g,'/'), name = String(file.name || ''), combined = path + '/' + name;
-  const cache = path.match(/(?:^|\/)plugins\/cache\/[^/]+\/([^/]+)/i);
-  if (cache) return {key:'plugin:' + cache[1].toLowerCase(),label:cache[1]};
   for (const [prefix,label] of [['gstack','gstack'],['higgsfield','Higgsfield']]) {
     if (new RegExp('(?:^|[/\\s:])' + prefix + '(?:[-/:]|$)','i').test(combined)) return {key:prefix,label};
   }
+  const cache = path.match(/(?:^|\/)plugins\/cache\/[^/]+\/([^/]+)/i);
+  if (cache) return {key:'plugin:' + cache[1].toLowerCase(),label:cache[1]};
   const namespace = name.match(/^([^/:]+):/); if (namespace) return {key:'namespace:' + namespace[1].toLowerCase(),label:namespace[1]};
   const parts = path.split('/').filter(Boolean), category = parts.findIndex(part => ['skills','agents','rules','commands','hooks','plugins'].includes(part));
   if (category >= 0) {
@@ -1316,6 +1331,13 @@ function configurationSourceFamily(file) {
   }
   const parent = parts.at(-2);
   return {key:'source:' + (parent || 'other'),label:parent?.startsWith('.') ? parent : file.repo ? 'Project files' : 'Other sources'};
+}
+function configurationSourceCollection(file) {
+  const path=String(file.path || '').replace(/\\/g,'/');
+  const cache=path.match(/(?:^|\/)plugins\/cache\/([^/]+)\//i);
+  if(cache)return {key:'provider:'+cache[1],label:cache[1]+' plugins'};
+  const home=path.match(/(?:^|\/)(\.[^/]+)\/(skills|agents|rules|commands|hooks)\//i);
+  return home?{key:home[1]+':'+home[2],label:home[1]+' / '+home[2]}:{key:'other',label:file.repo?'Project sources':'Other sources'};
 }
 function configurationSourceLabel(file) {
   const parts = String(file.path || '').replace(/\\/g,'/').split('/').filter(Boolean), name = file.name || parts.at(-1) || file.id;
@@ -1373,14 +1395,30 @@ function configurationCanvasModel(files = configurationFiles()) {
       const families = new Map();
       for (const file of groupFiles) { const family = configurationSourceFamily(file); if (!families.has(family.key)) families.set(family.key,{...family,files:[]}); families.get(family.key).files.push(file); }
       const familyList = [...families.values()].sort((a,b) => a.label.localeCompare(b.label));
-      for (const [familyIndex,family] of familyList.entries()) {
+      const collections=new Map();
+      if(familyList.length>12)for(const family of familyList) {
+        if(['gstack','higgsfield'].includes(family.key))continue;
+        const collection=configurationSourceCollection(family.files[0]);
+        if(!collections.has(collection.key))collections.set(collection.key,{...collection,families:[]});
+        collections.get(collection.key).families.push(family);
+      }
+      for(const collection of collections.values()) {
+        const collectionId=category.id+':collection:'+encodeURIComponent(collection.key);
+        nodes.push({id:collectionId,parentId:category.id,kind:'family',label:collection.label,files:collection.families.flatMap(family=>family.files),width,height:112,x:0,y:0});
+        edges.push({from:category.id,to:collectionId,relationship:'availability',label:'source collection'});
+      }
+      for (const family of familyList) {
         let familyParent = category.id;
-        if (familyList.length > 12) {
-          const start = Math.floor(familyIndex / 12) * 12, chunk = familyList.slice(start,start + 12);
-          familyParent += ':families:' + encodeURIComponent(chunk[0].key);
-          if (familyIndex === start) {
-            nodes.push({id:familyParent,parentId:category.id,kind:'family',label:chunk[0].label + ' → ' + chunk.at(-1).label,files:chunk.flatMap(item => item.files),width,height:112,x:0,y:0,range:true});
-            edges.push({from:category.id,to:familyParent,relationship:'availability',label:'source groups'});
+        if (familyList.length > 12 && !['gstack','higgsfield'].includes(family.key)) {
+          const collection=collections.get(configurationSourceCollection(family.files[0]).key),position=collection.families.indexOf(family);
+          familyParent=category.id+':collection:'+encodeURIComponent(collection.key);
+          if(collection.families.length>12) {
+            const start=Math.floor(position/12)*12,chunk=collection.families.slice(start,start+12),collectionParent=familyParent;
+            familyParent+=':families:'+encodeURIComponent(chunk[0].key);
+            if(position===start) {
+              nodes.push({id:familyParent,parentId:collectionParent,kind:'family',label:chunk[0].label+' → '+chunk.at(-1).label,files:chunk.flatMap(item=>item.files),width,height:112,x:0,y:0,range:true});
+              edges.push({from:collectionParent,to:familyParent,relationship:'availability',label:'source groups'});
+            }
           }
         }
         const familyId = category.id + ':family:' + encodeURIComponent(family.key), sorted = family.files.slice().sort((a,b) => configurationSourceLabel(a).localeCompare(configurationSourceLabel(b)) || String(a.path || a.id).localeCompare(String(b.path || b.id)));
@@ -1549,7 +1587,7 @@ function renderConfigurationWorkspace(root) {
   configurationWorkspaceState = configurationPruneCanvasState(model,configurationWorkspaceState);
   const workspace = element('div','configuration-workspace'); workspace.id = 'configuration-workspace';
   const explorer = element('details','configuration-explorer'); explorer.open = true; explorer.append(element('summary','','Explorer · ' + number(files.length) + ' files'));
-  const search = element('input','configuration-explorer-search'); search.type = 'search'; search.placeholder = 'Find a file…'; search.setAttribute('aria-label','Find a configuration file'); explorer.append(search);
+  const search = element('input','configuration-explorer-search'); search.name='configuration-search';search.type = 'search'; search.placeholder = 'Find a file…'; search.setAttribute('aria-label','Find a configuration file'); explorer.append(search);
   for (const project of [false,...(loading.repo ? [true] : [])]) {
     const scoped = files.filter(file => !!file.repo === project), branch = configurationBranch(key + ':explorer:' + project,project ? repoName(loading.repo) : 'Global',scoped.length,true);
     branch.dataset.scope = project ? 'repo' : 'global';
@@ -2816,6 +2854,12 @@ function renderSessionStartup() {
   tools.append(button('Inspect MCP servers','button secondary compact',event => action(event.currentTarget,async () => { componentDrilldown('tools'); await inspectComponentServers(); })),button('Review custom agents','text-link',() => componentDrilldown('subagent')),element('span','form-hint','Inspect reads local definitions so you can review named servers and their settings.'));
   const method = element('details','startup-method'); method.append(element('summary','','What this scan can tell you'),element('p','form-hint','Instruction order is predicted from file locations. Text estimates use bytes / 4 and do not include the live system prompt, tool schemas or conversation. Skill descriptions are discovered candidates, not proof of enablement or startup loading; bodies are normally read on invocation for supported agents. Global and project rules can combine. A full context-window breakdown requires a report from the agent; optional report import is in Advanced tools → Context.'));
   root.replaceChildren(heading,route,element('p','startup-source-note form-hint','These files are predicted to be read for this launch. Global guidance and applicable repository or folder guidance combine; file discovery is not a live session measurement.'),review,tools,method);
+  const reading=globalThis.HarnessFirstUse?.measurements(state?.contextEvidence,selectedAgent,activeRepo,loading.launchDirectory)[0];
+  if(reading && Number.isFinite(reading.inputTokens)) {
+    const observed=element('section','startup-observed');
+    observed.append(element('h3','','Observed first request'),element('strong','startup-estimate-value',number(reading.inputTokens)+' input tokens'),element('p','form-hint','Includes the prompt · '+date(reading.measuredAt)+' · launch folder: '+reading.launchDirectory),element('p','form-hint',Number.isFinite(reading.capacity)&&reading.capacity>0?(reading.inputTokens/reading.capacity*100).toFixed(1)+'% of reported capacity. Category costs and individual file loading are not confirmed.':'Capacity and category costs were not reported. This session total is separate from the file estimates above.'),button('View measurement and verification','text-link',()=>{location.hash='dashboard';}));
+    root.append(observed);
+  }
   if (model.record) {
     const report = element('details','startup-method startup-recorded-report'); report.append(element('summary','','Recorded startup report · ' + date(model.record.at) + ' · not live'));
     const bar = element('div','context-breakdown-bar startup-context-bar'); bar.setAttribute('aria-hidden','true');
@@ -3645,7 +3689,11 @@ $('setup-folder-form').addEventListener('submit',event => { event.preventDefault
   const path = $('setup-folder-path').value.trim(); if (!path) throw new Error('Enter the full path to a repository.');
   await api('/api/settings',{repos:[...new Set([...array(state.settings.repos),path])]}); await api('/api/scan',{}); await refresh();
   const found = array(state.inventory?.repos).map(repoPath).find(repo => repo === path);
-  if (found) { chooseRepo(found); $('setup-folder-path').value = ''; toast('Repository discovered. Choose its coding agent next.'); }
+  if (found) {
+    chooseRepo(found); $('setup-folder-path').value = '';
+    if(view==='dashboard') { $('setup-guide').open=false;$('first-use-more').open=false;$('first-use-scope-toolbar').scrollIntoView({block:'start',behavior:'smooth'});$('repo-select').focus({preventScroll:true}); }
+    toast('Repository discovered. Choose its coding agent next.');
+  }
   else toast('Folder added. The scan did not identify a repository at that exact path. Check discovery in Advanced tools.');
 }); });
 $('file-close').addEventListener('click',closeEditor); $('file-cancel').addEventListener('click',closeEditor); $('file-dialog').addEventListener('cancel',event => { event.preventDefault(); closeEditor(); });

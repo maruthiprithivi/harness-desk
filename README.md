@@ -15,7 +15,7 @@ Understand what your coding agent loads, where it comes from, and what needs att
 Install the beta from GitHub Releases (npm downloads the archive directly):
 
 ```sh
-npm install --global https://github.com/maruthiprithivi/harness-desk/releases/download/v0.1.0-beta.1/harness-desk-0.1.0-beta.1.tgz
+npm install --global https://github.com/maruthiprithivi/harness-desk/releases/download/v0.1.0-beta.2/harness-desk-0.1.0-beta.2.tgz
 harness-desk start
 ```
 
@@ -44,7 +44,7 @@ Follow the [illustrated user guide](https://github.com/maruthiprithivi/harness-d
 | Agent | Automatic measurement | Validation |
 | --- | --- | --- |
 | Codex, OpenCode, Oh My Pi, Kimi | First-request input | Live macOS checks |
-| Claude Code | First-response input, including cache | Fixtures pass; managed live check quota-blocked |
+| Claude Code | First-response input, including cache | Live macOS check |
 | Pi | First-request input | Fixtures only |
 | Kiro | Context percentage after the response | Live macOS check; no startup-token comparison |
 | Orca | Discovery and manual handoff | No automatic measurement |

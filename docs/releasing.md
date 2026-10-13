@@ -15,7 +15,7 @@ Each release needs:
 - A clean commit and passing publishing gates.
 - Platform evidence and accurate support labels.
 
-The current preview is `0.1.0-beta.1`. Windows stays experimental until its acceptance work is complete. Packaging does not establish unsupported agent capabilities.
+The current preview is `0.1.0-beta.2`. Windows stays experimental until its acceptance work is complete. Packaging does not establish unsupported agent capabilities.
 
 Mark previews as GitHub prereleases and upload only the tested runtime archive and its checksum.
 

@@ -677,6 +677,7 @@ export async function createApp({dataDir=process.env.HARNESS_DATA_DIR||path.join
         const result=mutation.then(()=>post(route,body));mutation=result.catch(()=>{});return send(200,await result);
       }
       check(req.method==='GET','Unsupported method');
+      if(route==='/favicon.svg'||route==='/favicon.ico')return send(200,await fs.readFile(path.join(base,'public/favicon.svg'),'utf8'),'image/svg+xml');
       const files={'/first-use.js':['public/first-use.js','text/javascript; charset=utf-8'],'/first-use.css':['public/first-use.css','text/css; charset=utf-8'],'/':['public/index.html','text/html; charset=utf-8'],'/app.js':['public/app.js','text/javascript; charset=utf-8'],'/style.css':['public/style.css','text/css; charset=utf-8'],'/vendor/editor.js':['public/vendor/editor.js','text/javascript; charset=utf-8']};
       if(route==='/report'){const file=await store.location('reports/latest.html');return send(200,await fs.readFile(file,'utf8'),'text/html; charset=utf-8');}
       if(files[route]){let content=await fs.readFile(path.join(base,files[route][0]),'utf8');if(route==='/')content=content.replaceAll('__EDITOR_NONCE__',editorNonce);return send(200,content,files[route][1]);}

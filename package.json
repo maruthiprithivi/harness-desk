@@ -1,6 +1,6 @@
 {
   "name": "harness-desk",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "description": "A local dashboard for understanding and improving coding-agent setups.",
   "private": false,
   "license": "MIT",
@@ -10,7 +10,7 @@
   "bugs": {"url": "https://github.com/maruthiprithivi/harness-desk/issues"},
   "keywords": ["coding-agents", "claude-code", "codex", "context", "mcp", "skills"],
   "bin": {"harness-desk": "harness-desk.mjs"},
-  "files": ["harness-desk.mjs", "start.mjs", "server.mjs", "lib/*.mjs", "public/app.js", "public/first-use.js", "public/first-use.css", "public/index.html", "public/style.css", "public/vendor/editor.js", "public/vendor/license/provenance.md", "README.md", "LICENSE", "SECURITY.md", "CHANGELOG.md"],
+  "files": ["harness-desk.mjs", "start.mjs", "server.mjs", "lib/*.mjs", "public/app.js", "public/first-use.js", "public/first-use.css", "public/index.html", "public/style.css", "public/favicon.svg", "public/vendor/editor.js", "public/vendor/license/provenance.md", "README.md", "LICENSE", "SECURITY.md", "CHANGELOG.md"],
   "publishConfig": {"access": "public", "tag": "beta"},
   "type": "module",
   "engines": {
