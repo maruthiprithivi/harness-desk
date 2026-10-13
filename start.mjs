@@ -40,10 +40,12 @@ export async function lockData(dataDir,port,key) {
   }finally{await fs.rmdir(guard);}
 }
 
-export async function health(url) {
+export async function health(url,request=fetch) {
   let response;
-  try {response=await fetch(url+'/api/health',{signal:AbortSignal.timeout(1500),redirect:'error'});}
-  catch(error){if(error.cause?.code==='ECONNREFUSED')return null;throw new Error('Could not check the local service: '+error.message);}
+  for(let attempt=0;attempt<2;attempt++){
+    try {response=await request(url+'/api/health',{signal:AbortSignal.timeout(1500),redirect:'error',headers:{Connection:'close'}});break;}
+    catch(error){if(error.cause?.code==='ECONNREFUSED')return null;if(attempt===0&&['ECONNRESET','EPIPE','UND_ERR_SOCKET'].includes(error.cause?.code))continue;throw new Error('Could not check the local service: '+error.message);}
+  }
   let result;try{result=await response.json();}catch{throw new Error('The port is occupied by an unrecognized service.');}
   if(result?.app!=='harness-observatory'||!['starting','ready'].includes(result.status)||!Number.isSafeInteger(result.pid)||result.pid<=0)throw new Error('The port is occupied by another service.');
   return result;

@@ -29,6 +29,14 @@ test('health distinguishes a starting instance from readiness',async t=>{
  const port=await listener(t,{app:'harness-observatory',status:'starting',pid:123},503);assert.equal((await health('http://127.0.0.1:'+port)).status,'starting');
 });
 
+test('health confirms refusal after a shutdown socket reset without treating uncertain errors as stopped',async()=>{
+ const failure=code=>Object.assign(new Error('fetch failed'),{cause:{code}});let calls=0;
+ assert.equal(await health('http://127.0.0.1:4319',async(_url,options)=>{assert.equal(options.headers.Connection,'close');throw failure(calls++?'ECONNREFUSED':'UND_ERR_SOCKET');}),null);
+ assert.equal(calls,2);
+ await assert.rejects(()=>health('http://127.0.0.1:4319',async()=>{throw failure('UND_ERR_SOCKET');}),/Could not check/);
+ await assert.rejects(()=>health('http://127.0.0.1:4319',async()=>{throw failure('ETIMEDOUT');}),/Could not check/);
+});
+
 test('launcher rejects another data directory on the same port',async t=>{
  const dir=await fixture(t),dataDir=path.join(dir,'unused');const port=await listener(t,{app:'harness-observatory',status:'ready',pid:123,instanceKey:'different'});await assert.rejects(()=>start({port,dataDir}),/another checkout or data directory/);
 });
