@@ -19,9 +19,10 @@ const publicExplainer={
 const publicMedia=new Set(['docs/user-guide.md','docs/assets/explainer/README.md','docs/assets/explainer/captions.vtt','media/explainer/README.md','media/explainer/package.json','media/explainer/package-lock.json','media/explainer/Dockerfile','media/explainer/render.mjs','media/explainer/prepare.mjs','media/explainer/finalize.mjs','media/explainer/src/index.tsx','media/explainer/src/chapters.mjs']);
 const sizeLimit=file=>Object.hasOwn(publicExplainer,file)?32*1024*1024:1024*1024;
 
-const rootFiles=new Set(['.gitignore','.cbmignore','AGENTS.md','README.md','PRODUCT.md','CONTRACT.md','CONTRIBUTING.md','SECURITY.md','LICENSE','package.json','package-lock.json','server.mjs','start.mjs','start.cmd','start.command']);
+const rootFiles=new Set(['.gitignore','.cbmignore','AGENTS.md','README.md','PRODUCT.md','CONTRACT.md','CONTRIBUTING.md','SECURITY.md','CHANGELOG.md','LICENSE','package.json','package-lock.json','harness-desk.mjs','server.mjs','start.mjs','start.cmd','start.command']);
+const publicDocumentation=new Set(['docs/runtime.md','docs/configuration.md','docs/workflows.md','docs/privacy.md','docs/releasing.md']);
 export function publicPath(file) {
-  if(Object.hasOwn(publicScreenshots,file)||Object.hasOwn(publicExplainer,file)||publicMedia.has(file))return true;
+  if(Object.hasOwn(publicScreenshots,file)||Object.hasOwn(publicExplainer,file)||publicMedia.has(file)||publicDocumentation.has(file)||file==='.github/workflows/ci.yml')return true;
   return rootFiles.has(file)||['public/vendor/editor.js','public/vendor/license/provenance.md','docs/context-measurement-capabilities.md','docs/designs/harness-desk-product-brief.md'].includes(file)||/^(?:lib\/[a-z0-9_][a-z0-9._-]*\.mjs|public\/[a-z0-9_][a-z0-9._-]*\.(?:html|css|js)|test\/[a-z0-9_][a-z0-9._-]*\.test\.mjs|scripts\/[a-z0-9_][a-z0-9._-]*\.mjs|\.githooks\/pre-(?:commit|push))$/i.test(file);
 }
 const rules=[

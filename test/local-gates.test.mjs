@@ -7,6 +7,7 @@ import {execFileSync,spawnSync} from 'node:child_process';
 import {cleanupLocal} from '../scripts/cleanup-local.mjs';
 import {installHooks} from '../scripts/install-hooks.mjs';
 import {releaseFindings} from '../scripts/check-release.mjs';
+import {packagePatterns} from '../scripts/check-package.mjs';
 import {publicPath} from '../scripts/check-public.mjs';
 function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'harness-gates-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));execFileSync('git',['init','-q'],{cwd:root});fs.writeFileSync(path.join(root,'.gitignore'),'.verification/\ndata/\n.local-archive/\n');return root;}
 test('cleanup previews and archives only disposable artifacts with recoverable provenance',t=>{
@@ -21,6 +22,15 @@ test('cleanup refuses tracked content, absent ignores and symlinked roots',t=>{
 });
 test('release prerequisites stay blocked for the current unpublished package',()=>{
  const issues=releaseFindings({name:'old-name',private:true},'',{committed:false,clean:false});assert.equal(issues.length,8);assert.ok(issues.some(x=>x.includes('LICENSE')));assert.ok(issues.some(x=>x.includes('reviewed source commit')));assert.equal(publicPath('CONTRIBUTING.md'),true);assert.equal(publicPath('.local-archive/recovery.md'),false);
+});
+test('release metadata accepts only the reviewed runtime files and CLI without install hooks',()=>{
+ const pkg={name:'harness-desk',private:false,license:'MIT',bin:{'harness-desk':'harness-desk.mjs'},files:packagePatterns};
+ const reviewed={committed:true,clean:true};
+ assert.deepEqual(releaseFindings(pkg,'Synthetic license fixture',reviewed),[]);
+ for(const files of [['**/*'],[...packagePatterns,'data/'],packagePatterns.slice(1),[...packagePatterns.slice(1),packagePatterns[1]]])assert.match(releaseFindings({...pkg,files},'fixture',reviewed).join(),/allowlist/);
+ assert.match(releaseFindings({...pkg,bin:{'harness-desk':'server.mjs'}},'fixture',reviewed).join(),/CLI/);
+ for(const field of ['preinstall','install','postinstall'])assert.match(releaseFindings({...pkg,scripts:{[field]:'node fixture.mjs'}},'fixture',reviewed).join(),/installation hooks/);
+ assert.match(releaseFindings({...pkg,dependencies:{fixture:'1.0.0'}},'fixture',reviewed).join(),/dependency-free/);
 });
 test('hook installation preserves prior hooks, replays push input and restores configuration',{skip:process.platform==='win32'},t=>{
  const root=fixture(t),prior=path.join(root,'original hooks');fs.mkdirSync(prior);fs.mkdirSync(path.join(root,'scripts'));

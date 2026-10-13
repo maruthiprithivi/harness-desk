@@ -1,7 +1,17 @@
 {
-  "name": "harness-observatory",
-  "version": "0.1.0",
+  "name": "harness-desk",
+  "version": "0.1.0-beta.1",
+  "description": "A local dashboard for understanding and improving coding-agent setups.",
   "private": true,
+  "license": "UNLICENSED",
+  "author": "Maruthi Prithivirajan",
+  "homepage": "https://github.com/maruthiprithivi/harness-desk#readme",
+  "repository": {"type": "git", "url": "git+https://github.com/maruthiprithivi/harness-desk.git"},
+  "bugs": {"url": "https://github.com/maruthiprithivi/harness-desk/issues"},
+  "keywords": ["coding-agents", "claude-code", "codex", "context", "mcp", "skills"],
+  "bin": {"harness-desk": "harness-desk.mjs"},
+  "files": ["harness-desk.mjs", "start.mjs", "server.mjs", "lib/*.mjs", "public/app.js", "public/first-use.js", "public/first-use.css", "public/index.html", "public/style.css", "public/vendor/editor.js", "public/vendor/license/provenance.md", "README.md", "LICENSE", "SECURITY.md", "CHANGELOG.md"],
+  "publishConfig": {"access": "public", "tag": "beta"},
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -14,9 +24,12 @@
     "check:public:history": "node scripts/check-public.mjs --history",
     "check:local": "node scripts/check-local.mjs",
     "check:release": "node scripts/check-release.mjs",
+    "check:package": "node scripts/check-package.mjs",
+    "smoke:package": "node scripts/package-smoke.mjs",
     "hooks:install": "node scripts/install-hooks.mjs",
     "hooks:uninstall": "node scripts/install-hooks.mjs --uninstall",
     "clean:local": "node scripts/cleanup-local.mjs",
-    "prepack": "node scripts/check-release.mjs"
+    "prepack": "node scripts/check-release.mjs",
+    "prepublishOnly": "node scripts/check-release.mjs"
   }
 }

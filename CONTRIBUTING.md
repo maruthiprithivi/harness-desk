@@ -74,4 +74,4 @@ The project license is still pending maintainer selection. Do not assume a licen
 
 Report ordinary bugs with versions, platform, sanitized steps and expected versus actual behavior. Do not attach your full configuration or transcript.
 
-For a suspected vulnerability, do not post exploit details or sensitive data publicly. Use a private repository security-reporting channel if one has been enabled; otherwise request a private contact using a minimal description without secrets. A public security policy and reporting channel remain release prerequisites.
+For a suspected vulnerability, follow [SECURITY.md](SECURITY.md) and use the repository's private vulnerability reporting channel. Do not post exploit details or sensitive data publicly.
