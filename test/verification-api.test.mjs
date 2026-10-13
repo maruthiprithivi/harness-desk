@@ -21,7 +21,7 @@ async function fixture(t,{auth='signed-in',seedRuns=[],agent='codex'}={}) {
   });
   const app=await createApp({home,dataDir:store.root,verify,probe:async()=>[{id:agent,installed:true,auth,version:'test-version'}],dispatch:async()=>{throw new Error('Unexpected provider dispatch');}});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
-  t.after(async()=>{await new Promise(resolve=>app.server.close(resolve));await fs.rm(dir,{recursive:true,force:true});});
+  t.after(async()=>{await new Promise(resolve=>app.server.close(resolve));await app.store.pendingWrite;await fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:100});});
   const url='http://127.0.0.1:'+app.server.address().port,state=()=>fetch(url+'/api/state').then(response=>response.json());
   const token=(await state()).csrfToken;
   const post=async body=>{const response=await fetch(url+'/api/verification',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':token},body:JSON.stringify(body)});return {status:response.status,body:await response.json()};};
