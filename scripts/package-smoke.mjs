@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {constants} from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import http from 'node:http';
@@ -8,6 +9,9 @@ import {checkPackage} from './check-package.mjs';
 
 const npm=process.env.npm_execpath;
 if(!npm||!path.isAbsolute(npm))throw new Error('Run through npm run smoke:package.');
+const args=process.argv.slice(2);
+if(args.length&&!(args.length===2&&args[0]==='--archive-dir'&&args[1].trim()))throw new Error('Usage: npm run smoke:package -- [--archive-dir PATH]');
+const archiveDirectory=args.length?path.resolve(args[1]):null;
 const fixture=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'Harness Desk λ ')));
 const output=path.join(fixture,'archive'),prefix=path.join(fixture,'install'),home=path.join(fixture,'home');
 await Promise.all([output,prefix,home].map(dir=>fs.mkdir(dir)));
@@ -47,6 +51,7 @@ try{
   if(!run(process.execPath,[cli,'status','--port',String(port)],env).includes('stopped'))throw new Error('Shutdown was not confirmed.');
   await fs.access(path.join(home,'.harness-desk','manifest.json'));
   if(JSON.stringify(await fs.readdir(root))!==JSON.stringify(before))throw new Error('Runtime wrote into its installation directory.');
+  if(archiveDirectory){await fs.mkdir(archiveDirectory,{recursive:true,mode:0o700});const retained=path.join(archiveDirectory,manifest[0].filename);await fs.copyFile(archive,retained,constants.COPYFILE_EXCL);checkPackage(retained);}
   console.log('Package smoke passed: '+JSON.stringify({platform:process.platform,version,...review}));
 }finally{
   if(pid){try{process.kill(pid,'SIGTERM');}catch(error){if(error.code!=='ESRCH')throw error;}await new Promise(resolve=>setTimeout(resolve,500));}

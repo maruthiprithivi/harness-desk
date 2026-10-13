@@ -12,7 +12,14 @@ Understand what your coding agent loads, where it comes from, and what needs att
 
 ## Quick start
 
-The npm release is being prepared. Run the source today:
+Install the beta package from GitHub:
+
+```sh
+npm install --global https://github.com/maruthiprithivi/harness-desk/releases/download/v0.1.0-beta.1/harness-desk-0.1.0-beta.1.tgz
+harness-desk start
+```
+
+Or run from source:
 
 ```sh
 git clone https://github.com/maruthiprithivi/harness-desk.git
@@ -20,7 +27,7 @@ cd harness-desk
 npm start
 ```
 
-Open **http://127.0.0.1:4319**. The launcher keeps the app running in the background and prints its PID and log location. See [runtime controls](https://github.com/maruthiprithivi/harness-desk/blob/main/docs/runtime.md) for stopping it, changing ports and troubleshooting.
+Open **http://127.0.0.1:4319**. The launcher prints its background PID and log location. Stop the package with `harness-desk stop`; see [runtime controls](https://github.com/maruthiprithivi/harness-desk/blob/main/docs/runtime.md) for source controls and troubleshooting.
 
 ## Your first improvement
 

@@ -10,7 +10,7 @@ Source launchers store data in the checkout's `data/`. Stop the printed PID with
 
 ## Packaged CLI
 
-These commands are included in the release candidate. Registry installation will be documented after publication.
+Install the [GitHub beta archive](https://github.com/maruthiprithivi/harness-desk/releases/tag/v0.1.0-beta.1) using the README command. npm registry publication is separate; use the versioned archive URL until it is available.
 
 ```sh
 harness-desk start
