@@ -77,4 +77,4 @@ Tests use synthetic data and never require signed-in agents. Hooks preserve exis
 
 ## License
 
-Project licensing is pending maintainer selection. Package publication remains disabled until it is approved.
+[MIT](LICENSE). Bundled third-party code retains its own license notices.

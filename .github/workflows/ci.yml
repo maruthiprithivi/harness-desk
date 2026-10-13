@@ -35,3 +35,5 @@ jobs:
         run: npm run check:local
       - name: Public history
         run: npm run check:public:history
+      - name: Archive and isolated installation
+        run: npm run smoke:package

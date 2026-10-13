@@ -68,7 +68,7 @@ UI changes should use plain language, keyboard-accessible controls and clear nex
 
 Describe the problem, resulting behavior and validation. State what remains untested, especially native Windows behavior and real provider calls. Include a rollback approach for configuration-writing changes. Keep private testing evidence local. All bundled third-party code must retain license notices and reproducible provenance.
 
-The project license is still pending maintainer selection. Do not assume a license from the third-party editor notices; settle licensing before merging external contributions or distributing a package.
+The project uses the [MIT license](LICENSE). Contributions are provided under the same license. Bundled third-party code retains its own notices.
 
 ## Bugs and security concerns
 
