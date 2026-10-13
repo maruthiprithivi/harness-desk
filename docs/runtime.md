@@ -10,7 +10,7 @@ Source launchers store data in the checkout's `data/`. Stop the printed PID with
 
 ## Packaged CLI
 
-Install the [GitHub beta archive](https://github.com/maruthiprithivi/harness-desk/releases/tag/v0.1.0-beta.1) using the README command. npm registry publication is separate; use the versioned archive URL until it is available.
+Install the [GitHub beta archive](https://github.com/maruthiprithivi/harness-desk/releases/tag/v0.1.0-beta.1) using the README command. GitHub Releases is the distribution channel; npm installs the archive directly without an npm registry release.
 
 ```sh
 harness-desk start

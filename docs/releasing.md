@@ -2,20 +2,22 @@
 
 [README](../README.md) · [Contributing](../CONTRIBUTING.md)
 
-## First npm release
+## GitHub distribution
 
-Public GitHub source exists. A package additionally needs:
+Users can clone the repository or install a versioned archive from GitHub Releases. npm registry publication is deferred and is not a release requirement.
 
-- A maintainer-selected license and matching metadata.
+Each release needs:
+
+- The MIT license and matching metadata.
 - An installable CLI with data outside its installation.
 - A reviewed file allowlist and tested archive.
 - Private vulnerability reporting.
 - A clean commit and passing publishing gates.
 - Platform evidence and accurate support labels.
 
-The candidate is `0.1.0-beta.1`. Windows stays experimental until its acceptance work is complete. Packaging does not establish unsupported agent capabilities.
+The current preview is `0.1.0-beta.1`. Windows stays experimental until its acceptance work is complete. Packaging does not establish unsupported agent capabilities.
 
-GitHub prereleases can distribute the same reviewed archive before npm registry publication. Mark previews as prereleases and upload only the tested runtime archive and its checksum.
+Mark previews as GitHub prereleases and upload only the tested runtime archive and its checksum.
 
 ## Validate
 
@@ -35,12 +37,12 @@ CI uses public source and synthetic fixtures only. Platform smoke tests differ f
 
 ## Publish
 
-Review license, version, changelog, archive and registry identity. Recheck package-name availability. Publish the reviewed prerelease under `beta`; reserve `latest` for an accepted stable release.
+Review the version, changelog, archive contents and complete outgoing history. Tag the reviewed source commit and create a GitHub release with the tested archive and `SHA256SUMS`. Record the source commit, installation command, validation and support limits in the release notes.
 
-Install the exact registry version in a fresh isolated environment and repeat the smoke test. Verify docs and downloads; record the version and source commit in release notes.
+Download the published archive, verify its checksum and install it in a fresh isolated environment. Repeat the lifecycle smoke test and check documentation links. Keep preview releases marked as prereleases until stable acceptance is complete.
 
 ## Recovery
 
-Preserve user data. Deprecate a bad registry version with a concise reason and publish a corrected version rather than rewriting it. Users can reinstall a known good version with their existing data directory. Verify data compatibility before recommending a downgrade.
+Preserve user data. Add a warning to a faulty release and publish a corrected version; do not replace published archives or move their tags. Users can reinstall a known good GitHub archive with their existing data directory. Verify data compatibility before recommending a downgrade.
 
 Windows backlog: [lifecycle](https://github.com/maruthiprithivi/harness-desk/issues/6), [configuration/recovery](https://github.com/maruthiprithivi/harness-desk/issues/7), [agent adapters](https://github.com/maruthiprithivi/harness-desk/issues/8).

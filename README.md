@@ -12,7 +12,7 @@ Understand what your coding agent loads, where it comes from, and what needs att
 
 ## Quick start
 
-Install the beta package from GitHub:
+Install the beta from GitHub Releases (npm downloads the archive directly):
 
 ```sh
 npm install --global https://github.com/maruthiprithivi/harness-desk/releases/download/v0.1.0-beta.1/harness-desk-0.1.0-beta.1.tgz

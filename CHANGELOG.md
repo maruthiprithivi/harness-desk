@@ -2,7 +2,7 @@
 
 ## 0.1.0-beta.1 — GitHub beta
 
-[Download the MIT beta](https://github.com/maruthiprithivi/harness-desk/releases/tag/v0.1.0-beta.1). npm registry publication is pending.
+[Download the MIT beta](https://github.com/maruthiprithivi/harness-desk/releases/tag/v0.1.0-beta.1) from GitHub Releases, or run from a source checkout.
 
 - Configuration canvas, explorer and reviewed syntax editor.
 - Scoped inventory, skills/MCP review and supported-agent session comparisons.
