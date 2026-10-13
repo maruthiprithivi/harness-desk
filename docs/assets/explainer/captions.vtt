@@ -1,0 +1,92 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:03.995
+Multiple projects. Multiple coding agents.
+Which instructions belong where? Harness
+
+00:00:03.995 --> 00:00:07.991
+Desk brings your setup into one local workspace, so you
+
+00:00:07.991 --> 00:00:11.986
+can understand it, improve one thing, and check the result.
+
+00:00:13.000 --> 00:00:16.382
+Choose a project and a coding agent. Global guidance and
+
+00:00:16.382 --> 00:00:19.426
+project instructions appear with their source paths. A clean
+
+00:00:19.426 --> 00:00:22.809
+folder outside a project has no project instructions to add.
+
+00:00:24.000 --> 00:00:28.130
+Explore the hierarchy beside a
+familiar file tree. Expand skills
+
+00:00:28.130 --> 00:00:32.673
+and tool sources in groups. Solid
+connections show predicted instruction order.
+
+00:00:32.673 --> 00:00:36.803
+Dashed connections show available sources,
+without claiming they actually loaded.
+
+00:00:38.000 --> 00:00:41.686
+Open a source, check its scope,
+and edit with syntax highlighting.
+
+00:00:41.686 --> 00:00:45.372
+Review the diff before saving. A backup is created first. Or
+
+00:00:45.372 --> 00:00:49.058
+prepare a scoped question and choose a coding agent to help.
+
+00:00:50.000 --> 00:00:54.617
+Capture a fresh baseline, then
+repeat the same small task after your
+
+00:00:54.617 --> 00:00:59.235
+change. Supported adapters collect the reading
+automatically. This simulated example shows twelve
+
+00:00:59.235 --> 00:01:03.852
+thousand, then nine thousand input
+tokens. Real results depend on your setup.
+
+00:01:05.000 --> 00:01:07.917
+Input tokens include your first prompt. They are not
+
+00:01:07.917 --> 00:01:11.157
+a verified breakdown of every file and tool. Keep conditions
+
+00:01:11.157 --> 00:01:14.074
+comparable, check the response,
+and use a representative task
+
+00:01:14.074 --> 00:01:16.991
+to see whether the setup still does the job.
+
+00:01:18.000 --> 00:01:21.316
+Support levels are visible in the app. Several adapters
+
+00:01:21.316 --> 00:01:25.001
+have real Mac validation. Claude and Pi still have live
+
+00:01:25.001 --> 00:01:28.318
+verification gaps. Kiro reports
+context after the response. Windows
+
+00:01:28.318 --> 00:01:31.634
+validation and the public package release are in progress.
+
+00:01:33.000 --> 00:01:36.689
+Start with one project, one agent,
+and one worthwhile improvement. Keep
+
+00:01:36.689 --> 00:01:40.378
+your sources local, review what you send to an agent, and
+
+00:01:40.378 --> 00:01:44.067
+let the evidence guide your next
+change. This is Harness Desk.
+

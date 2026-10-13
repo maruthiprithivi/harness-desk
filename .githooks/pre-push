@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+node scripts/check-public.mjs --push
+node scripts/check-local.mjs

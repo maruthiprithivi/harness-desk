@@ -1,0 +1,69 @@
+.first-use{max-width:1100px;margin:0 auto;color:var(--ink);font-size:16px;line-height:1.55;min-width:0}
+.first-use .first-use-heading>h2{font-size:30px;letter-spacing:-.6px;line-height:1.2}
+.first-use h2{font-size:22px;letter-spacing:-.3px}
+.first-use h3{font-size:17px;letter-spacing:0;line-height:1.4}
+.first-use p{max-width:75ch}
+.first-use button{font-size:15px;min-height:40px;white-space:normal}
+.first-use-heading{margin-bottom:26px}
+.first-use-scope{margin-top:8px;color:var(--muted);overflow-wrap:anywhere}
+.first-use-journey{display:flex;list-style:none;padding:0;margin:0 0 32px;border-bottom:1px solid var(--line);gap:28px}
+.first-use-journey li{flex:1;padding-bottom:18px;min-width:0}
+.first-use-journey strong{display:block;color:var(--ink);font-weight:650}
+.first-use-journey span{display:block;font-size:14px;color:var(--muted);margin-top:3px}
+.first-use-section{padding:26px 0;border-bottom:1px solid var(--line)}
+.first-use-section:first-of-type{padding-top:0}
+.first-use-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.first-use-muted{color:var(--muted);font-size:15px;margin-top:8px}
+.first-use-sources{list-style:none;margin:18px 0 0;padding:0}
+.first-use-sources li{display:flex;align-items:center;gap:18px;padding:12px 0;border-top:1px solid var(--line)}
+.first-use-origin{font-size:14px;color:var(--teal-dark);flex:0 0 60px;font-weight:600}
+.first-use-source-name{flex:1;min-width:0}
+.first-use-source-name strong{display:block;font-size:16px;overflow-wrap:anywhere}
+.first-use-path{display:block;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;color:var(--muted);overflow-wrap:anywhere;margin-top:3px}
+.first-use-empty{margin:16px 0;max-width:65ch!important}
+.first-use-details{margin-top:14px;color:var(--muted);font-size:14px}
+.first-use-details summary{cursor:pointer;color:var(--teal-dark);padding:5px 0}
+.first-use-details p{margin:8px 0}
+.first-use-observed{margin-top:18px;min-width:0}
+.first-use-measurement{margin:8px 0 12px;font-size:18px;font-weight:650;font-variant-numeric:tabular-nums}
+.first-use-meter{height:18px;background:var(--line);border-radius:4px;overflow:hidden;max-width:100%}
+.first-use-meter span{display:block;height:100%;background:var(--teal);min-width:1px}
+.first-use-meta{display:block;font-size:14px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.first-use-collection{margin-top:22px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px}
+.first-use-session-list{border:0;margin:18px 0;padding:0;min-width:0;max-height:320px;overflow:auto;scrollbar-color:var(--muted) var(--cream)}
+.first-use-session-choice{display:flex;align-items:flex-start;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.first-use-session-choice input{accent-color:var(--teal);margin-top:6px;width:18px;height:18px;flex-shrink:0}
+.first-use-session-choice strong{display:block;font-weight:550;overflow-wrap:anywhere}
+.first-use-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.first-use-insights{list-style:none;padding:0;margin:14px 0 0}
+.first-use-insights>li{padding:18px 0;border-top:1px solid var(--line)}
+.first-use-insights>li:last-child{padding-bottom:0}
+.first-use-comparison-fields{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin:18px 0}
+.first-use-comparison-fields label{flex:1;min-width:180px;max-width:100%;font-weight:600;font-size:14px}
+.first-use-comparison-fields select{display:block;width:100%;margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--white);color:var(--ink);font-size:15px}
+.first-use-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:28px}
+.first-use-result{margin-top:18px;font-weight:650;font-variant-numeric:tabular-nums}
+.first-use-warning{margin-top:12px;color:#795008;font-size:15px}
+.first-use-error{color:var(--danger);margin-top:14px}
+.first-use-status{margin-top:14px;font-size:15px;color:var(--teal-dark)}
+.first-use-status:empty{display:none}
+.first-use .button:disabled{cursor:not-allowed}
+.first-use ::selection{background:#c8e8df;color:var(--ink)}
+@media(max-width:700px){.first-use .first-use-heading>h2{font-size:26px}.first-use-journey{gap:12px;margin-bottom:20px}.first-use-journey span{display:none}.first-use-section-heading{align-items:flex-start;flex-direction:column}.first-use-sources li{gap:10px;flex-wrap:wrap}.first-use-origin{flex-basis:52px}.first-use-source-name{min-width:calc(100% - 62px)}.first-use-sources li>button{margin-left:62px}.first-use-pair{grid-template-columns:1fr;gap:10px}.first-use-collection{padding:16px}.first-use-comparison-fields{align-items:stretch;flex-direction:column}.first-use-comparison-fields label{width:100%}}
+.first-use-automatic>h2{margin-bottom:14px}
+.first-use-run{padding:16px 0 22px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.first-use-run-form{max-width:760px;margin-top:20px}
+.first-use-field{display:block;font-size:15px;font-weight:600;margin:16px 0}
+.first-use-field input,.first-use-field textarea{display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--white);color:var(--ink);font-size:16px;line-height:1.5;caret-color:var(--teal)}
+.first-use-field textarea{resize:vertical;min-height:105px}
+.first-use-disclosure{margin:20px 0 12px;color:var(--muted);font-size:14px}
+.first-use-consent{display:flex;align-items:flex-start;gap:10px;margin:14px 0 18px;font-size:15px;cursor:pointer}
+.first-use-consent input{width:18px;height:18px;margin-top:3px;accent-color:var(--teal);flex-shrink:0}
+.first-use-check{font-weight:600;margin-top:12px}
+.first-use-manual{border-bottom:1px solid var(--line);padding:18px 0}
+.first-use-manual>summary{cursor:pointer;color:var(--teal-dark);font-size:15px;font-weight:600;min-height:32px}
+.first-use-manual>.first-use-section{border-bottom:0;padding-top:18px}
+.first-use-support {width:100%;border-collapse:collapse;font-size:14px;text-align:left;margin-block:16px}
+.first-use-support caption {text-align:left;margin-bottom:12px;color:var(--muted)}
+.first-use-support th,.first-use-support td {padding:12px 8px;border-bottom:1px solid var(--border);vertical-align:top;overflow-wrap:anywhere}
+.first-use-support th {font-weight:600}
