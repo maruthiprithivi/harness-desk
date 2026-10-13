@@ -285,7 +285,7 @@ test('failed scoped decision writes preserve disk and in-memory records before r
   const state = await f.state(); assert.equal(Object.keys(state.recommendationRecords).length, 2);
   assert.equal(f.app.store.manifest['recommendation-records.json'].pinned, true);
   const file = await f.app.store.location('recommendation-records.json');
-  assert.equal((await fs.stat(file)).mode & 0o777, 0o600);
+  if(process.platform!=='win32')assert.equal((await fs.stat(file)).mode & 0o777, 0o600);
   const resumed = await f.start(); assert.deepEqual((await resumed.state()).recommendationRecords, state.recommendationRecords);
   assert.deepEqual(await resumed.app.store.read('recommendation-records.json'), await f.app.store.read('recommendation-records.json'));
   await f.unchanged();

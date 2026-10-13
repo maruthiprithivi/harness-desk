@@ -8,6 +8,7 @@ import {Store} from '../lib/store.mjs';
 import {createApp} from '../server.mjs';
 
 const privateBody='Synthetic instruction body excluded from metadata previews.';
+const predictionDirectory=value=>process.platform==='win32'?value.replaceAll('\\','/').toLowerCase():value;
 const mapFiles=map=>map.groups.flatMap(group=>group.files);
 const findFile=(map,file)=>mapFiles(map).find(item=>item.path===file);
 
@@ -84,13 +85,13 @@ test('loading API forwards the discovered launch folder and predicts independent
   const f=await fixture(t);
   const root=await f.post('/api/loading',{repo:f.repo,agent:'codex'});
   assert.equal(root.status,200);
-  assert.equal(root.body.launchDirectory,f.repo);
-  assert.deepEqual(root.body.directories,[f.repo,path.join(f.repo,'src'),f.launch,f.sibling]);
+  assert.equal(root.body.launchDirectory,predictionDirectory(f.repo));
+  assert.deepEqual(root.body.directories,[f.repo,path.join(f.repo,'src'),f.launch,f.sibling].map(predictionDirectory));
   assert.equal(findFile(root.body,f.paths.ancestor).status,'conditional');
   assert.equal(root.body.observation.id,'root-reading');
   const nested=await f.post('/api/loading',{repo:f.repo,agent:'codex',launchDirectory:f.launch});
   assert.equal(nested.status,200);
-  assert.equal(nested.body.launchDirectory,f.launch);
+  assert.equal(nested.body.launchDirectory,predictionDirectory(f.launch));
   for(const file of [f.paths.global,f.paths.root,f.paths.ancestor,f.paths.override])assert.equal(findFile(nested.body,file).status,'applies');
   assert.equal(findFile(nested.body,f.paths.base).status,'shadowed');
   assert.equal(findFile(nested.body,f.paths.sibling).status,'conditional');
@@ -109,7 +110,7 @@ test('loading API forwards the discovered launch folder and predicts independent
 test('Claude nested predictions combine CLAUDE variants while retaining agent-specific uncertainty',async t=>{
   const f=await fixture(t),result=await f.post('/api/loading',{repo:f.repo,agent:'claude',launchDirectory:f.launch});
   assert.equal(result.status,200);
-  assert.equal(result.body.launchDirectory,f.launch);
+  assert.equal(result.body.launchDirectory,predictionDirectory(f.launch));
   for(const file of [f.paths.claudeGlobal,f.paths.claudeRoot,f.paths.claudeAncestor,f.paths.claudeLaunch,f.paths.claudeLocal])assert.equal(findFile(result.body,file).status,'applies');
   assert.equal(findFile(result.body,f.paths.root).status,'unknown');
   assert.equal(findFile(result.body,f.paths.override).status,'shadowed');
@@ -145,7 +146,7 @@ test('invalid launch folders and scope types reject without writing state or his
 test('context predictions expose only selected file metadata and distinguish whole-scope estimates',async t=>{
   const f=await fixture(t),full=await preview(f);
   const prediction=full.context.loadingPrediction;
-  assert.equal(prediction.repo,f.repo);assert.equal(prediction.agent,'codex');assert.equal(prediction.launchDirectory,f.launch);assert.equal(prediction.inferred,true);
+  assert.equal(prediction.repo,f.repo);assert.equal(prediction.agent,'codex');assert.equal(prediction.launchDirectory,predictionDirectory(f.launch));assert.equal(prediction.inferred,true);
   assert.ok(Array.isArray(prediction.groups));assert.ok(Array.isArray(prediction.notes));
   assert.match(prediction.interpretation,/metadata|predict|inferred/i);
   assert.equal(findFile(prediction,f.paths.override).status,'applies');
@@ -197,7 +198,7 @@ test('chat retains launch folder and evidence agent across follow-ups and restar
   let chat=response.body;
   assert.equal(chat.status,'handoff');assert.equal(chat.agent,'claude');assert.equal(chat.reviewAgent,'codex');assert.equal(chat.launchDirectory,f.launch);
   const prediction=JSON.parse(chat.context.text).context.loadingPrediction;
-  assert.equal(prediction.agent,'codex');assert.equal(prediction.launchDirectory,f.launch);
+  assert.equal(prediction.agent,'codex');assert.equal(prediction.launchDirectory,predictionDirectory(f.launch));
   assert.equal(findFile(prediction,f.paths.override).status,'applies');
   assert.equal(chat.handoffText.includes(privateBody),false);assert.equal(chat.handoffText.includes(f.other),false);
   assert.equal((await f.post('/api/reply',{id:chat.id,content:'Synthetic review complete.'})).status,200);

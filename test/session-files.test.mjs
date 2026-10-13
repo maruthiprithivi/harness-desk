@@ -98,7 +98,9 @@ test('symlinked ancestors, roots, directories and files are never followed',asyn
 test('hardlinks and unsafe names are excluded with generic coverage only',async t=>{
   const f=await fixture(t),hard=await f.file('claude','hard.jsonl');await fs.link(hard,path.join(f.root('claude'),'hard-copy.jsonl'));
   const sensitive='sk-'+'x'.repeat(24);
-  for(const label of ['secrets/one.jsonl','credentials.json','authentication.json','[REDACTED].jsonl',sensitive+'.jsonl','control\u0007.jsonl'])await f.file('claude',label);
+  const labels=['secrets/one.jsonl','credentials.json','authentication.json','[REDACTED].jsonl',sensitive+'.jsonl'];
+  if(process.platform!=='win32')labels.push('control\u0007.jsonl'); // Windows rejects control characters before discovery.
+  for(const label of labels)await f.file('claude',label);
   const safe=await f.file('claude','safe.jsonl'),result=await findSessionFiles({home:f.home,agent:'claude'});
   assert.deepEqual(result.files.map(file=>file.path),[safe]);assert.equal(result.coverage.filesFound,1);assert.equal(result.coverage.partial,true);
   for(const value of ['secrets','credentials.json','authentication.json',sensitive,'control\u0007','hard.jsonl'])assert.equal(JSON.stringify(result).includes(value),false);

@@ -55,7 +55,7 @@ test('report parsing is transient and exposes only category percentages',async t
   const invalid=await f.post('/api/context-breakdown',{action:'parse',report:privateText});assert.equal(invalid.status,400);assert.equal(JSON.stringify(invalid.body).includes(privateText),false);
   const saved=await f.post('/api/context-breakdown',snapshot(f.repo,{percentages:parsed.body.percentages,report,notes:privateText}));assert.equal(saved.status,200);
   const text=await fs.readFile(await f.app.store.location('context-breakdowns.json'),'utf8');assert.equal(text.includes(privateText),false);assert.equal(text.includes('fixture-model'),false);
-  assert.equal((await fs.stat(await f.app.store.location('context-breakdowns.json'))).mode&0o777,0o600);
+  if(process.platform!=='win32')assert.equal((await fs.stat(await f.app.store.location('context-breakdowns.json'))).mode&0o777,0o600);
   assert.equal(saved.body.basis,'percentage of whole context window');assert.equal(saved.body.source,'user supplied harness report percentages');
   assert.ok(Number.isFinite(Date.parse(saved.body.at)));assert.match(saved.body.id,/^[a-f0-9-]{36}$/);
   const resumed=await f.start();assert.deepEqual((await resumed.state()).contextBreakdowns,[saved.body]);f.unchanged();

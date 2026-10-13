@@ -341,8 +341,8 @@ test('scoped repeat evidence excludes other repositories and preserves nested co
   await fs.writeFile(file,records.map(JSON.stringify).join('\n'));
  }
  assert.equal((await post('/api/mine',{paths:files})).status,200);
- const local=JSON.parse(app.context({repo:'/repo-a',sections:['patterns']}).text).patterns;
- assert.equal(local.candidates.length,2);for(const candidate of local.candidates){assert.equal(candidate.occurrences,3);assert.equal(candidate.distinctSessions,2);assert.deepEqual(candidate.repos,['/repo-a']);assert.equal(JSON.stringify(candidate).includes('/repo-b'),false);assert.equal(JSON.stringify(candidate).includes('repo-b-'),false);assert.equal('evidenceByRepo' in candidate,false);}
+ const local=JSON.parse(app.context({repo:path.resolve('/repo-a'),sections:['patterns']}).text).patterns;
+ assert.equal(local.candidates.length,2);for(const candidate of local.candidates){assert.equal(candidate.occurrences,3);assert.equal(candidate.distinctSessions,2);assert.deepEqual(candidate.repos,[path.resolve('/repo-a')]);assert.equal(JSON.stringify(candidate).includes('/repo-b'),false);assert.equal(JSON.stringify(candidate).includes('repo-b-'),false);assert.equal('evidenceByRepo' in candidate,false);}
  assert.ok(local.candidates.some(c=>c.kind==='command'));assert.equal(JSON.stringify(local).includes('hidden'),false);
 });
 

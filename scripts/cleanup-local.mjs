@@ -3,6 +3,7 @@ import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {execFileSync,spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {sameLocalPath} from '../lib/path-identity.mjs';
 const candidates=['.verification','data/qa'];
 function directory(root,relative,optional=false) {
   let cursor=root;
@@ -16,7 +17,7 @@ function directory(root,relative,optional=false) {
 export function cleanupLocal(root,{apply=false}={}) {
   root=path.resolve(root);
   const git=args=>execFileSync('git',args,{cwd:root,encoding:'utf8'});
-  if(path.resolve(git(['rev-parse','--show-toplevel']).trim())!==root)throw new Error('Run cleanup from the repository root.');
+  if(!sameLocalPath(path.resolve(git(['rev-parse','--show-toplevel']).trim()),root))throw new Error('Run cleanup from the repository root.');
   const found=[];
   for(const candidate of candidates) {
     if(!directory(root,candidate,true))continue;

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
 import {importUsage, componentCallEvidence} from '../lib/usage-evidence.mjs';
 
 const repo = '/fixture/project', nested = repo + '/nested';
@@ -154,7 +155,7 @@ test('forbidden, oversize and malformed files yield generic partial coverage wit
 });
 
 test('path imports reject links and invalid UTF-8 without echoing source paths or contents', async t => {
-  const directory = await fs.realpath(await fs.mkdtemp('/tmp/harness-usage-'));
+  const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'harness-usage-')));
   t.after(() => fs.rm(directory, {recursive: true, force: true}));
   const regular = path.join(directory, 'regular.json'), linked = path.join(directory, 'linked.json');
   await fs.writeFile(regular, JSON.stringify([claude([skill()])]));

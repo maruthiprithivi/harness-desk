@@ -6,6 +6,8 @@
 
 Inventories, chats, imported audits, journal excerpts, measurements, reports and backups stay in the selected data directory. Source launchers use `data/`; the packaged CLI defaults to `~/.harness-desk`.
 
+On Windows, Unix file-mode bits do not establish private access. Use a user-owned directory with restricted Windows permissions; native ACL acceptance remains outstanding.
+
 Discovery avoids credential files and keeps supported configuration metadata-only. Opening an eligible file explicitly reads its body. Recognized secrets and SOPS documents are withheld from editing and backup. Sign-in probes use agent CLIs rather than reading auth files.
 
 ## Outbound requests

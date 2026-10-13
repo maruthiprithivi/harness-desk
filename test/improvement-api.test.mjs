@@ -184,7 +184,7 @@ test('private ledger stays pinned through retention and restart, caps records an
   f.app.store.manifest['improvements.json'].updatedAt='2000-01-01T00:00:00Z';
   const prune=await f.post('/api/prune',{days:1,preview:false});assert.equal(prune.status,200);
   assert.equal(prune.body.files.some(item=>item.path==='improvements.json'),false);
-  assert.equal((await fs.stat(await f.app.store.location('improvements.json'))).mode&0o777,0o600);
+  if(process.platform!=='win32')assert.equal((await fs.stat(await f.app.store.location('improvements.json'))).mode&0o777,0o600);
   const resumed=await f.start();assert.deepEqual((await resumed.state()).improvements,[record]);
   const records=Array.from({length:100},(_,index)=>({...record,id:randomUUID(),title:'Synthetic retained comparison '+index}));
   await f.app.store.write('improvements.json',records,{kind:'improvement-test',pinned:true});

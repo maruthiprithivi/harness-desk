@@ -59,7 +59,7 @@ test('editing a discovered file preserves its original bytes and permissions in 
   const result=await saveFile({...options,version:read.version,content:'# Updated fixture\n'});
   assert.equal(result.saved,true);assert.notEqual(result.version,read.version);assert.equal(await fs.readFile(file,'utf8'),'# Updated fixture\n');
   assert.equal(await fs.readFile(await store.location(result.backup),'utf8'),original);assert.equal(store.manifest[result.backup].pinned,true);
-  assert.equal((await fs.stat(file)).mode&0o777,0o640);assert.equal((await store.prune(1,true)).files.some(f=>f.path.startsWith('backups/')),false);
+  if(process.platform!=='win32')assert.equal((await fs.stat(file)).mode&0o777,0o640);assert.equal((await store.prune(1,true)).files.some(f=>f.path.startsWith('backups/')),false);
   const noop=await saveFile({...options,version:result.version,content:result.content});assert.equal(noop.saved,false);assert.equal(noop.backup,null);
 });
 test('editor explains file purpose and distinguishes opening from saving at global and project scope',async t=>{

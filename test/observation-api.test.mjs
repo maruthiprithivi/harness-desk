@@ -95,7 +95,7 @@ test('observation notes and paths are redacted, persist across restart and retai
   assert.equal(result.body.evidence,'user supplied fresh-session context');
   assert.equal(result.body.note,'Synthetic measurement [REDACTED]');assert.deepEqual(result.body.loadedPaths,['fixture-path/[REDACTED]']);
   const file=await f.app.store.location('observations.json'),stored=await fs.readFile(file,'utf8');assert.equal(stored.includes(sensitive),false);assert.deepEqual(JSON.parse(stored),[result.body]);
-  assert.equal((await fs.stat(file)).mode&0o777,0o600);
+  if(process.platform!=='win32')assert.equal((await fs.stat(file)).mode&0o777,0o600);
   const resumed=await f.start();assert.deepEqual((await resumed.state()).observations,[result.body]);
   const loading=await resumed.post('/api/loading',{repo:f.repo,agent:'codex'});assert.equal(loading.status,200);assert.equal(loading.body.observation.id,result.body.id);assert.equal(loading.body.observation.repo,f.repo);assert.equal(loading.body.observation.agent,'codex');assert.equal(loading.body.observation.startupTokens,100);
   assert.equal(JSON.stringify(loading.body.observation).includes(sensitive),false);assert.match(loading.body.observation.evidence,/User-supplied/);
